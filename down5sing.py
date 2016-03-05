@@ -1,3 +1,4 @@
+
 import urllib.request
 from urllib.request import urlopen
 import urllib.parse
@@ -5,6 +6,20 @@ import os, shutil, sys
 import re
 import json
 from time import time
+
+doc = '''\
+input.txt中接受两种形式的输入文本：一种为点击插件的“查看下载地址”按钮后显现的 歌曲名 歌曲地址 列表组成的多行字符串（一般来说即为直接将该窗格内所有内容复制得到的内容）；第二种为点击插件的导出歌曲按钮后显现的由歌曲ID和类型组成的单行字符串。
+前者形如：
+    第一首歌
+    第二首歌
+    
+    http://data.5sing.kgimg.com/xxx
+    http://data.5sing.kgimg.com/xxxx
+    http://data.5sing.kgimg.com/xxxxx
+    
+后者形如：
+    yc$1234567$fc$9998765$bz$1111111
+''';
 
 def read(sFile=None) -> '2-tuple of lists':
     if sFile == None:
@@ -56,6 +71,7 @@ def main():
         aNames, aUrls = read(sFile);
     else:
         print('找不到歌曲信息文件，请将存有歌曲信息的文件以文件名 input.txt 保存到脚本的同目录下。');
+        print(doc);
         print('转为手动信息输入模式。')
         aNames, aUrls = read();
     print('歌曲信息读取完成。');
