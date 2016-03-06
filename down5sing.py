@@ -51,7 +51,7 @@ def read(sFile=None) -> '2-tuple of lists':
         delimiter = sInfo.find('http://');
         r1 = re.compile(r'^\s*(\S.*?)\s*$', re.M);
         aNames = r1.findall(sInfo[:delimiter]);
-        r2 = re.compile(r'^\s*(https?://.+/(\w+(\.mp3|wma)))\s*$', re.M);
+        r2 = re.compile(r'^\s*(https?://.+/([^/.]+(\.mp3|wma)))\s*$', re.M);
         aUrls = r2.findall(sInfo[delimiter:]);
         n1, n2, i = len(aNames), len(aUrls), 0;
         while i < n2:
