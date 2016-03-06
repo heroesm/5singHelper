@@ -1,4 +1,3 @@
-
 import urllib.request
 from urllib.request import urlopen
 import urllib.parse
@@ -8,7 +7,7 @@ import json
 from time import time
 
 doc = '''\
-input.txt中接受两种形式的输入文本：一种为点击插件的“查看下载地址”按钮后显现的 歌曲名 歌曲地址 列表组成的多行字符串（一般来说即为直接将该窗格内所有内容复制得到的内容）；第二种为点击插件的导出歌曲按钮后显现的由歌曲ID和类型组成的单行字符串。
+input.txt中接受两种形式的输入文本：一种为点击插件的“查看下载地址”按钮后显现的 歌曲名 歌曲地址 列表组成的多行字符串（一般来说即为直接将该窗格内所有内容复制得到的内容，只复制地址行也可以下载，这时文件名会从地址中获取）；第二种为点击插件的导出歌曲按钮后显现的由歌曲ID和类型组成的单行字符串。
 前者形如：
     第一首歌
     第二首歌
@@ -46,18 +45,24 @@ def read(sFile=None) -> '2-tuple of lists':
         aNames = []
         aUrls = [];
         for x in aSongs:
-            aNames.append(x['songname']);
+            aNames.append(x['songname'] + x['sign'][-4:]);
             aUrls.append(x['sign']);
     else:
         delimiter = sInfo.find('http://');
         r1 = re.compile(r'^\s*(\S.*?)\s*$', re.M);
         aNames = r1.findall(sInfo[:delimiter]);
-        r2 = re.compile(r'^\s*(https?://.+\.(mp3|wma))\s*$', re.M);
+        r2 = re.compile(r'^\s*(https?://.+/(\w+(\.mp3|wma)))\s*$', re.M);
         aUrls = r2.findall(sInfo[delimiter:]);
+        n1, n2, i = len(aNames), len(aUrls), 0;
+        while i < n2:
+            if (i < n1): aNames[i] += aUrls[i][2];
+            else: aNames[i:] = [aUrls[i][1]];
+            aUrls[i] = aUrls[i][0];
+            i += 1;
     return (aNames, aUrls);
 
 def download(sName, sUrl, target):
-    filepath = os.path.join(target, sName + sUrl[-4:]);
+    filepath = os.path.join(target, sName);
     mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
     print('已下载：' + os.path.abspath(mp3[0]))
 
@@ -86,8 +91,4 @@ def main():
     print('下载已完成。');
     input('按回车键退出。');
     
-try:
-    main();
-except Exception as e:
-    print('出现错误：\n', e);
-    input('输入回车退出……');
+main();
