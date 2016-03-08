@@ -6,7 +6,7 @@
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
 // @include     about:neterror
-// @version     1
+// @version     1.0.1
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -40,7 +40,8 @@ function main(){
             shortcut2: 'd',
             shortcut3: 'f',
             shortcut4: 'g',
-            control: '1'
+            control: '1',
+            volfix: '0'
         },
         container: {},
         prepare: prepare,
@@ -237,13 +238,17 @@ function main(){
             '            <option value="0">关闭</option>',
             '            <option value="1" selected>开启</option>',
             '    </select></li>',
+            '    <li title="是否尝试修复firefox浏览器中插件播放器音量在显示/隐藏操作后错误地显示为最大的问题，其他浏览器用户可无视此选项">音量修复：<select id="helper_opt_volfix">',
+            '            <option value="0" selected>关闭</option>',
+            '            <option value="1" >开启</option>',
+            '    </select></li>',
             '    <li title="可为一位小写字母或数字，在窗口中按下此键会尝试载入更多歌曲（可用时），与点击歌曲列表中的相应区域等效">获取更多：<input type="text" id="helper_opt_get" value="g"></li>',
             '</ul>',
-            '<p class="helper_about helper_left">',
-            '    <span>项目主页：</span><br /><a href="https://github.com/heroesm/5singHelper">5singHelper</a>',
-            '    <br />',
-            '    <span>问题反馈：</span><br /><a href="https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B/feedback">5sing助手</a>',
-            '</p>',
+            '<div class="helper_about helper_left">',
+            '    <p>项目主页：<a href="https://github.com/heroesm/5singHelper">5singHelper</a>',
+            '    <br /></p>',
+            '    <p>问题反馈：<a href="https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B/feedback">5sing助手</a></p>',
+            '</div>',
             '</div>',
             '<div class="helper_left"><p>※ 鼠标悬停在项目上可查看说明</p></div>',
             '<div class="helper_right">',
@@ -339,6 +344,9 @@ function main(){
         t = localStorage.helper_control;
         if(/^[01]$/.test(t))
             wsingHelper.player.control = t;
+        t = localStorage.helper_volfix;
+        if(/^[01]$/.test(t))
+            wsingHelper.player.volfix = t;
     }
 
     function confirmOption(divSet){
@@ -367,6 +375,8 @@ function main(){
         }
         t = divSet.$('#helper_opt_control').value;
         if(/^[01]$/.test(t)) localStorage.helper_control = wsingHelper.player.control = t;
+        t = divSet.$('#helper_opt_volfix').value;
+        if(/^[01]$/.test(t)) localStorage.helper_volfix = wsingHelper.player.volfix = t;
     }
 
     function resetOption(divSet){
@@ -388,6 +398,8 @@ function main(){
         t.value = wsingHelper.player.volume;
         t = divSet.$('#helper_opt_control');
         t.value = wsingHelper.player.control;
+        t = divSet.$('#helper_opt_volfix');
+        t.value = wsingHelper.player.volfix;
     }
 
     function preventAutoplay(){
@@ -1086,9 +1098,8 @@ function main(){
             '.helper_container .helper_setting #helper_opt ul li {max-width: 40%; height: 28px}',
             '.helper_container .helper_setting #helper_opt input {width: 60px; height: 20px}',
             '.helper_container .helper_setting .helper_about {overflow: hidden}',
-            '.helper_container .helper_setting .helper_about>* {visibility: hidden}',
+            '.helper_container .helper_setting .helper_about>* {visibility: hidden; margin: 0}',
             '.helper_container .helper_setting .helper_about:hover>* {visibility: visible}',
-            '.helper_container .helper_setting .helper_about p {min-width: 200px; min-height: 20px}',
             '.helper_song {float: left;}',
             '.helper_singer {float: right;}',
             '.helper_list {height: 300px; min-width: 400px; padding: 5px; overflow: auto; resize: vertical}',
@@ -1117,7 +1128,13 @@ function main(){
                 if(!container)
                     buildMy();
                 else{
-                    container.style.display= (container.style.display== 'none' ?'':'none');
+                    container.style.display= (container.style.display == 'none' ?'':'none');            
+                    if(wsingHelper.player.volfix == '1'){
+                        // a workaround to bypass the mistaken volume indicating in firefox when change the css 'display'
+                        var t = wsingHelper.player.audio.volume;
+                        wsingHelper.player.audio.volume = 1;
+                        wsingHelper.player.audio.volume = t;
+                    }
                 }
                 divToggle.className += ' helper_activate';
             };
