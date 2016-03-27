@@ -1089,7 +1089,7 @@ function main(){
             '.helper_container .helper_banner {overflow: hidden; background: white; position: relative; z-index: 1}',
             '.helper_container .helper_banner .helper_info {padding: 0px 5px; width: 440px; min-width: 420px; height: 100px; overflow: auto; resize: both; border-bottom: solid 1px;}',
             '.helper_container .helper_banner .helper_info .helper_description {white-space: pre-line; padding: 3px}',
-            '.helper_container .helper_banner .helper_info a {border: none; padding: 4px; font-weight: normal; font-size: medium;}',
+            '.helper_container .helper_banner .helper_info a {border: none; margin: 4px; font-weight: normal; font-size: medium;}',
             '.helper_container .helper_banner .helper_info a img {width: 60px; height: 60px}',
             '.helper_container .helper_setting {position: absolute; z-index: 10; top: 25px; left: 0px; right: 0px; bottom: 35px; background: white; border: none; overflow: auto; text-align: initial;}',
             '.helper_container .helper_setting * {margin: 3px;}',
