@@ -62,7 +62,7 @@ def read(sFile=None) -> '2-tuple of lists':
     return (aNames, aUrls);
 
 def download(sName, sUrl, target):
-    filepath = os.path.join(target, sName);
+    filepath = os.path.join(target, re.sub(r'[\\\/]', ' ', sName));
     mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
     print('已下载：' + os.path.abspath(mp3[0]))
 
