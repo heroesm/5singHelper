@@ -6,7 +6,7 @@
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
 // @include     about:neterror
-// @version     1.0.1
+// @version     1.0.2
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -64,17 +64,18 @@ function main(){
         createList: createList,
         buildMy: buildMy,
         setUpUI: setUpUI,
-        init: init
+        init: init,
+        notify: notify
     };
     var locked = false;
-    
+
     function prepare(){
         Document.prototype.$ = Document.prototype.querySelector;
         Element.prototype.$ = Element.prototype.querySelector;
         Document.prototype.$$ = Document.prototype.querySelectorAll;
         Element.prototype.$$ = Element.prototype.querySelectorAll;
     }
-    
+
     function jsonp(sUrl, success){
         var Result, sCallback;
         sCallback = 'callback_' + (new Date()).getTime();
@@ -96,8 +97,8 @@ function main(){
         }*/
         document.head.appendChild(script);
     }
-    
-    
+
+
     // implement jsonp with promise, not in use
     function jsonpp(sUrl){
         var p = new Promise(function(resolve,reject){
@@ -118,7 +119,22 @@ function main(){
         });
         return p;
     }
-    
+
+    function notify(sText, nTime){
+        debugger;
+        clearTimeout(notify.timeout);
+        var notifier = wsingHelper.container.notifier;
+        notifier.textContent = '提示：' + sText;
+        notifier.style.display = 'unset';
+        if(typeof nTime == 'number'){
+            notify.timeout = setTimeout(function(){
+                notifier.style.display = 'none';
+                notifier.textContent = '提示：';
+            }, nTime);
+        };
+    }
+
+
     function keyHandle1(e){
         //run before initialization of the main panel
         if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || e.target.type == 'checkbox') && e.altKey === false && e.ctrlKey === false){
@@ -128,7 +144,7 @@ function main(){
             }
         }
     }
-    
+
     function keyHandle2(e){
         //run after initialization of the main panel
         if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || e.target.type == 'checkbox') && e.altKey === false && e.ctrlKey === false){
@@ -164,7 +180,7 @@ function main(){
             }
         }
     }
-    
+
     function adjust(sScheme,node,nVer,nHor){
         function changePos(node,t,r,b,l){
             for(var i = 1; i< arguments.length; i++){
@@ -311,7 +327,7 @@ function main(){
         };
         return divSet;
     }
-    
+
     function checkSetting(){
         var t;
         t = localStorage.helper_pos;
@@ -581,12 +597,12 @@ function main(){
             return true;
         }
     }
-    
+
     function createList(ol){
         var newol = coin('ol','helper_songlist','helper_songlist');
         function click(e){
-                e.preventDefault();
-                wsingHelper.loadSong(e.currentTarget.index);
+            e.preventDefault();
+            wsingHelper.loadSong(e.currentTarget.index);
         }
         for(var i = 0, li; i< wsingHelper.aSongs.length;i++){
             var t = wsingHelper.aSongs[i];
@@ -635,25 +651,32 @@ function main(){
     }
 
     function searchSong() {
+        notify('载入中……');
         wsingHelper.aSongs = [];
         var t;
         if(window.location.href.indexOf('://5sing.kugou.com/my/')!== -1){
             //in personal center
             wsingHelper.aSongsDiv = document.$$('.m_player');
-            for (var i = 0, divSong; i < wsingHelper.aSongsDiv.length; i++) {
-                divSong = wsingHelper.aSongsDiv[i];
-                wsingHelper.aSongs[i] = {
-                    id: divSong.$('.m_player_name').firstChild.href.match(/\/(\d+)\./)[1],
-                    src: divSong.$('.m_player_btn_ready').getAttribute('onclick').match(/http:\/\/[^'"]+\.(mp3|m4a)/)[0],
-                    type: divSong.$('.m_player_name').firstChild.href.match(/\/(fc|yc|bz)\//)[1],
-                    space: divSong.parentNode.$('.show_userCard_link').href,
-                    singer: divSong.parentNode.$('.show_userCard_link').textContent,
-                    avatar: divSong.parentNode.previousSibling.$('img').src,
-                    songName: divSong.$('.m_player_name').textContent,
-                    description: divSong.parentNode.$('.msg_list_txt').children[0].textContent
-                };
-                if(!!(t = divSong.parentNode.$('.msg_list_txt').children[1]))
-                    wsingHelper.aSongs[i].description = t.textContent;
+            if(wsingHelper.aSongsDiv.length == 0){		
+                notify('请在页面完成载入后重试', 3000);
+            }
+            else{
+                for (var i = 0, divSong; i < wsingHelper.aSongsDiv.length; i++) {
+                    divSong = wsingHelper.aSongsDiv[i];
+                    wsingHelper.aSongs[i] = {
+                        id: divSong.$('.m_player_name').firstChild.href.match(/\/(\d+)\./)[1],
+                        src: divSong.$('.m_player_btn_ready').getAttribute('onclick').match(/http:\/\/[^'"]+\.(mp3|m4a)/)[0],
+                        type: divSong.$('.m_player_name').firstChild.href.match(/\/(fc|yc|bz)\//)[1],
+                        space: divSong.parentNode.$('.show_userCard_link').href,
+                        singer: divSong.parentNode.$('.show_userCard_link').textContent,
+                        avatar: divSong.parentNode.previousSibling.$('img').src,
+                        songName: divSong.$('.m_player_name').textContent,
+                        description: divSong.parentNode.$('.msg_list_txt').children[0].textContent
+                    };
+                    if(!!(t = divSong.parentNode.$('.msg_list_txt').children[1]))
+                        wsingHelper.aSongs[i].description = t.textContent;
+                }
+                notify('载入完成', 3000);
             }
         }
         else if(window.location.href.indexOf('://5sing.kugou.com/fm/m')!== -1){
@@ -682,6 +705,7 @@ function main(){
                     };
                 }
                 wsingHelper.container.olSong && createList(wsingHelper.container.olSong);
+                notify('载入完成', 3000);
             });
         }
         else if(/:\/\/5sing\.kugou\.com\/\w+\/[a-z]+(?:\/\d+)\.html/.test(window.location.href)){
@@ -710,6 +734,7 @@ function main(){
                     };
                 }
                 wsingHelper.container.olSong && createList(wsingHelper.container.olSong);
+                notify('载入完成', 3000);
             });
         }
         else if(/:\/\/5sing\.kugou\.com\/(?:yc|fc|bz)\/\d+\.html/.test(window.location.href)){
@@ -726,18 +751,43 @@ function main(){
                 description: (t = document.$('.lrc_info_clip'))? t.children[0].innerHTML: (t = document.$('.pl_lianxu'))? t.innerHTML: '未找到描述'
             };
             wsingHelper.aSongs[0].description = wsingHelper.aSongs[0].description.replace(/<img.+?>/g,'');
+            notify('载入完成', 3000);
         }
         else if(/:\/\/5sing\.kugou\.com\/\w+\/(default\.html)?(#|$)/.test(window.location.href)){
+            //in the main page of singer space, using 5sing api to search song in order of time
             var t = prompt('请用一位数字输入要远程载入的歌曲种类， 1 为原创， 2 为翻唱， 3 为伴奏');
-            fetchMore({}, 999999999, parseInt(t.match(/^\s*[123]\s*/)));
+            try{
+                t = parseInt(t.match(/^\s*[123]\s*/));
+                fetchMore({}, 999999999, t);
+            }catch(e){notify('载入被取消');}
         }
-        else console.log('没有匹配当前页面的规则');
+        else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href)){
+            //in mobile page
+            debugger;
+            var src = document.$('audio[src]').src;
+            wsingHelper.aSongs[0]= {
+                id: window.songID,
+                src: src,
+                type: window.kind,
+                space: 'http://5sing.kugou.com/' + document.$('.m_head').href.match(/(\d+)\.html/)[1],
+                singer: document.title.match(/(.+?) - (.+?) -/)[2],
+                avatar: document.$('.m_head img').src,
+                songName: document.title.match(/(.+?) - (.+?) -/)[1],
+                description: document.$('.info_txt').innerHTML
+            };
+            notify('载入完成', 3000);
+        }
+        else{
+            console.log('未支持本页面');
+            notify('未支持本页面', 3000);
+        }
     }
-    
+
     function fetchInSpaceP(node, songId, songKind){
         //use jsonp via promise, not in use
         locked = true;
         node.innerHTML = '载入中……';
+        notify('载入中……');
         var LastSong = wsingHelper.aSongs[wsingHelper.aSongs.length-1],
             id = songId || LastSong.id,
             type = songKind || (LastSong.type == 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
@@ -775,19 +825,22 @@ function main(){
             }
             createList(wsingHelper.container.olSong);
             locked = false;
+            notify('载入完成', 3000);
         })
         .catch(function(err){
             node.innerHTML= (err== 1? '已到达结尾': '载入失败，点击重试' + err);
+            notify(node.innerHTML, 3000);
         });
         setTimeout(function(){
             if(locked) node.innerHTML= '载入中……点击重试';
             locked = false;
         },3000);
     }
-    
+
     function fetchInSpace(node, songId, songKind){
         locked = true;
         node.innerHTML= '载入中……';
+        notify('载入中……');
         var LastSong = wsingHelper.aSongs[wsingHelper.aSongs.length-1],
             id = songId || LastSong.id,
             type = songKind || (LastSong.type== 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
@@ -796,40 +849,45 @@ function main(){
             var aJSON2 = wsingHelper.aJSON2 = res;
             if(aJSON2.length === 0){
                 locked = false;
+                notify('已到达结尾', 3000);
                 node.innerHTML= '已到达结尾';
-                return;
             }
-            var aSongs= [];
-            for(var i = 0; i< aJSON2.length; i++){
-                aSongs[i]= aJSON2[i].songType + '$' + aJSON2[i].id;
+            else{
+                var aSongs= [];
+                for(var i = 0; i< aJSON2.length; i++){
+                    aSongs[i]= aJSON2[i].songType + '$' + aJSON2[i].id;
+                }
+                jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aSongs.join('$'),function(res){
+                    wsingHelper.aJSON = res;
+                    if(res.length === 0){
+                        locked = false;
+                        notify('出现错误，歌曲不存在', 3000);
+                        node.innerHTML= '出现错误，歌曲不存在';
+                    }
+                    else{
+                        var n;
+                        for(n = 0; n< wsingHelper.aSongs.length; n++){
+                            if(wsingHelper.aJSON[0].id === wsingHelper.aSongs[n].id) break;
+                        }
+                        for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
+                            Song = wsingHelper.aJSON[i];
+                            wsingHelper.aSongs[n++]= {
+                                id: Song.id,
+                                src: Song.sign,
+                                type: Song.songtype,
+                                space: 'http://5sing.kugou.com/' + Song.userid,
+                                singer: Song.nickname,
+                                avatar: Song.avatar,
+                                songName: Song.songname,
+                                description: ''
+                            };
+                        }
+                        createList(wsingHelper.container.olSong);
+                        locked = false;
+                        notify('载入完成', 3000);
+                    }
+                });
             }
-            jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aSongs.join('$'),function(res){
-                wsingHelper.aJSON = res;
-                if(res.length === 0){
-                    locked = false;
-                    node.innerHTML= '出现错误，歌曲不存在';
-                    return;
-                }
-                var n;
-                for(n = 0; n< wsingHelper.aSongs.length; n++){
-                    if(wsingHelper.aJSON[0].id === wsingHelper.aSongs[n].id) break;
-                }
-                for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
-                    Song = wsingHelper.aJSON[i];
-                    wsingHelper.aSongs[n++]= {
-                        id: Song.id,
-                        src: Song.sign,
-                        type: Song.songtype,
-                        space: 'http://5sing.kugou.com/' + Song.userid,
-                        singer: Song.nickname,
-                        avatar: Song.avatar,
-                        songName: Song.songname,
-                        description: ''
-                    };
-                }
-                createList(wsingHelper.container.olSong);
-                locked = false;
-            });
         });
         setTimeout(function(){
             if(locked) node.innerHTML= '载入中……点击重试';
@@ -839,6 +897,7 @@ function main(){
 
     function fetchInCenter(node){
         node.innerHTML= '载入中……';
+        notify('载入中……');
         var nList = wsingHelper.nList + 1,
             url= '/my/handler/message?ts=' + (new Date()).getTime(),
             xhr = new XMLHttpRequest();
@@ -846,36 +905,39 @@ function main(){
             var aData = JSON.parse(xhr.response).Data, i, n;
             if(aData.length === 0){
                 node.innerHTML= '已到达结尾';
-                return;
+                notify('已到达结尾', 3000);
             }
-            //search in existed songs list to prevent repeat
-            for(i = 0; i< aData.length; i++){
-                if(aData[i].Category == 1){
-                    for(n = 0; n< wsingHelper.aSongs.length; n++){
-                        if(aData[i].BelongId === wsingHelper.aSongs[n].id) break;
+            else{
+                //search in existed songs list to prevent repeat
+                for(i = 0; i< aData.length; i++){
+                    if(aData[i].Category == 1){
+                        for(n = 0; n< wsingHelper.aSongs.length; n++){
+                            if(aData[i].BelongId === wsingHelper.aSongs[n].id) break;
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
-            for(var Song; i < aData.length; i++) {
-                if(aData[i].Category == 1){
-                    Song = JSON.parse(aData[i].Content);
-                    wsingHelper.aSongs[n++]= {
-                        id: aData[i].BelongId,
-                        src: Song.FileName,
-                        type: Song.SongType == 1? 'yc': Song.SongType == 2? 'fc': Song.SongType == 3? 'bz':'',
-                        space: 'http://5sing.kugou.com/' + aData[i].SrcUser.NewUserID,
-                        singer: aData[i].SrcUser.NickName,
-                        avatar: aData[i].SrcUser.Img,
-                        songName: Song.SongName,
-                        description: Song.Content? Song.Content.replace(/\[(img)\].*?\[\/(\1)\]/,''): ''
-                    };
-                    wsingHelper.aSongs.splice(n);
+                for(var Song; i < aData.length; i++) {
+                    if(aData[i].Category == 1){
+                        Song = JSON.parse(aData[i].Content);
+                        wsingHelper.aSongs[n++]= {
+                            id: aData[i].BelongId,
+                            src: Song.FileName,
+                            type: Song.SongType == 1? 'yc': Song.SongType == 2? 'fc': Song.SongType == 3? 'bz':'',
+                            space: 'http://5sing.kugou.com/' + aData[i].SrcUser.NewUserID,
+                            singer: aData[i].SrcUser.NickName,
+                            avatar: aData[i].SrcUser.Img,
+                            songName: Song.SongName,
+                            description: Song.Content? Song.Content.replace(/\[(img)\].*?\[\/(\1)\]/,''): ''
+                        };
+                        wsingHelper.aSongs.splice(n);
+                    }
                 }
+                wsingHelper.createList(wsingHelper.container.olSong);
+                console.log('completed',nList, wsingHelper.nList);
+                wsingHelper.nList = nList;
+                notify('载入完成', 3000);
             }
-            wsingHelper.createList(wsingHelper.container.olSong);
-            console.log('completed',nList, wsingHelper.nList);
-            wsingHelper.nList = nList;
         };
         xhr.onerror = function(){node.innerHTML= '载入失败，点击重试';};
         xhr.ontimeout = function(){node.innerHTML= '载入超时，点击重试';};
@@ -883,7 +945,7 @@ function main(){
         xhr.timeout = 6000;
         xhr.send();
     }
-    
+
     function fetchMore(node, songId, songKind){
         if(locked) return;
         //in personal center
@@ -906,9 +968,6 @@ function main(){
     }
 
     function buildMy(){
-        try{
-            wsingHelper.searchSong();
-        }catch(e){console.log(e)};
         var divMain = wsingHelper.container = coin('div', 'helper_container', 'helper_container');
         var divBanner = coin('div','helper_banner');
         var button1 = coin('button','helper_left','','','上一首'), 
@@ -1019,6 +1078,10 @@ function main(){
             else
                 div1.parentNode.removeChild(div1);
         };
+        var notifier = wsingHelper.container.notifier = coin('div', 'helper_notifier', 'helper_notifier', '', '提示');
+        try{
+            wsingHelper.searchSong();
+        }catch(e){console.log(e)};
         var divList = coin('div','helper_list'),
             divPlayer = coin('div','helper_player helper_clear');
         var Ol = createList();
@@ -1038,7 +1101,6 @@ function main(){
         audio.addEventListener('volumechange',function(e){
             localStorage.helper_volume = wsingHelper.player.audio.volume.toFixed(2) + '';
         });
-        var alertor = wsingHelper.container.alertor = coin('div', 'helper_alertor', 'helper_alertor', '', '提示');
         var t = localStorage.helper_pos;
         if(/^[1234]$/.test(t))
             adjust(t,divMain,80,50);
@@ -1062,7 +1124,7 @@ function main(){
         divMain.appendChild(divList);
         divMain.appendChild(divBottom);
         divMain.appendChild(divPlayer);
-        divMain.appendChild(alertor);
+        divMain.appendChild(notifier);
         document.body.appendChild(divMain);
     }
 
@@ -1073,7 +1135,7 @@ function main(){
             document.body.removeChild(document.$('#helper_toggle'));
         }
         catch(e){}
-        
+
         var style = coin('style',false,'helper_style');
         style.innerHTML = [
             '.helper_toggle {position: fixed; top: 100px; left: 10px; background: rgba(98, 183, 102, 0.5); width: 28px; height: 28px; border-radius: 14px;z-index: 99999}',
@@ -1116,7 +1178,7 @@ function main(){
             '.helper_prompt ol {border: 1px; overflow: auto; min-height: 100%}',
             '.helper_prompt ol:nth-child(1) {float: left; width: 35%}',
             '.helper_prompt ol:nth-child(2) {overflow: auto; padding-left: 10px; border-left: solid 1px}',
-            '.helper_alertor {position: fixed; top: 0px; left: 0px; display: none; background: rgba(0, 0, 0, 0.5); color: white !important; padding: 2px 8px; white-space: pre}',
+            '.helper_notifier {font-size: medium; position: fixed; top: 0px; left: 0px; display: none; background: rgba(0, 0, 0, 0.5); color: white !important; padding: 2px 8px; white-space: pre}',
             '.helper_left {float: left} .helper_right {float: right} .helper_clear {clear: both} .helper_clearL {clear: left} .helper_clearR {clear: right}'
         ].join('\n');
         document.head.appendChild(style);
@@ -1180,7 +1242,7 @@ function main(){
 try{
     main();
 }catch(e){console.log(e);}
-    
+
 // three way to run the script with debug ability.
 //var script = document.createElement('script');script.innerHTML = '(' + main.toString() + ')()';document.head.appendChild(script);
 //var script = document.createElement('script');script.innerHTML = 'eval(decodeURI("' + encodeURI('debugger;' + main.toString()) + 'main();"))';document.head.appendChild(script);
