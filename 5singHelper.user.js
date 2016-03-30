@@ -6,7 +6,7 @@
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
 // @include     about:neterror
-// @version     1.0.2
+// @version     1.0.3
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -137,7 +137,7 @@ function main(){
 
     function keyHandle1(e){
         //run before initialization of the main panel
-        if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || e.target.type == 'checkbox') && e.altKey === false && e.ctrlKey === false){
+        if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || /checkbox|submit/.test(e.target.type)) && e.altKey === false && e.ctrlKey === false){
             var key = wsingHelper.player.shortcut1;
             if(key && ((e.key && e.key.toLowerCase() == key) || e.code == 'Key' +  key.toUpperCase())){
                 document.$('#helper_toggle').click();
@@ -147,7 +147,7 @@ function main(){
 
     function keyHandle2(e){
         //run after initialization of the main panel
-        if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || e.target.type == 'checkbox') && e.altKey === false && e.ctrlKey === false){
+        if((!/input|textarea/.test(e.target.tagName.toLowerCase()) || /checkbox|submit/.test(e.target.type)) && e.altKey === false && e.ctrlKey === false){
             var key;
             if((key = wsingHelper.player.shortcut2) && ((e.key && e.key.toLowerCase() == key) || e.code == 'Key' +  key.toUpperCase())){
                 document.$('#helper_set').click();
@@ -753,7 +753,7 @@ function main(){
             wsingHelper.aSongs[0].description = wsingHelper.aSongs[0].description.replace(/<img.+?>/g,'');
             notify('载入完成', 3000);
         }
-        else if(/:\/\/5sing\.kugou\.com\/\w+\/(default\.html)?(#|$)/.test(window.location.href)){
+        else if(/:\/\/5sing\.kugou\.com\/\w+(\/default\.html|\/)?(#|$)/.test(window.location.href)){
             //in the main page of singer space, using 5sing api to search song in order of time
             var t = prompt('请用一位数字输入要远程载入的歌曲种类， 1 为原创， 2 为翻唱， 3 为伴奏');
             try{
@@ -958,7 +958,7 @@ function main(){
             //fetchInSpaceP(node, songId, songKind);
         }
         //try searching all songs of the singer in the main page of singer space
-        else if(/:\/\/5sing\.kugou\.com\/\w+\/(default\.html)?(#|$)/.test(window.location.href)){
+        else if(/:\/\/5sing\.kugou\.com\/\w+(\/default\.html|\/)?(#|$)/.test(window.location.href)){
             fetchInSpace(node, songId, songKind);
             //fetchInSpaceP(node, songId, songKind);
         }
