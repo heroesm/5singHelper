@@ -5,7 +5,6 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @include     about:neterror
 // @version     1.0.3
 // @grant       none
 // @run-at      document-start
@@ -121,7 +120,6 @@ function main(){
     }
 
     function notify(sText, nTime){
-        debugger;
         clearTimeout(notify.timeout);
         var notifier = wsingHelper.container.notifier;
         notifier.textContent = '提示：' + sText;
@@ -372,7 +370,7 @@ function main(){
         t = divSet.$('#helper_opt_pos').value;
         var a = wsingHelper.container, b = document.$('#helper_toggle');
         if(/^[1234]$/.test(t)){
-            adjust(t,a,80,50);
+            adjust(t,a,60,50);
             adjust(t,b,100,10);
             localStorage.helper_pos = t;
         }
@@ -763,7 +761,6 @@ function main(){
         }
         else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href)){
             //in mobile page
-            debugger;
             var src = document.$('audio[src]').src;
             wsingHelper.aSongs[0]= {
                 id: window.songID,
@@ -1103,7 +1100,7 @@ function main(){
         });
         var t = localStorage.helper_pos;
         if(/^[1234]$/.test(t))
-            adjust(t,divMain,80,50);
+            adjust(t,divMain,60,50);
         window.addEventListener('keydown',keyHandle2);
         divPlayer.appendChild(audio);
         divBanner.appendChild(button1);
@@ -1141,7 +1138,7 @@ function main(){
             '.helper_toggle {position: fixed; top: 100px; left: 10px; background: rgba(98, 183, 102, 0.5); width: 28px; height: 28px; border-radius: 14px;z-index: 99999}',
             '.helper_toggle *{top: 0px; right: 0px; bottom: 0px; left: 0px; margin: 4px; border-radius: 10px; position: absolute; background: white}',
             '.helper_toggle.helper_activate {background: rgba(98, 183, 102, 1); box-shadow: 0px 0px 3px #aaa;}',
-            '.helper_container {position: fixed; z-index: 99999; top:80px; left: 50px; background: white; border: 1px solid; overflow: visible; font: 12px/1.5 "Microsoft Yahei",Tahoma,Helvetica,Arial,sans-serif; color: black; text-align: left;}',
+            '.helper_container {position: fixed; z-index: 99999; top: 60px; left: 50px; background: white; border: 1px solid; overflow: visible; font: 12px/1.5 "Microsoft Yahei",Tahoma,Helvetica,Arial,sans-serif; color: black; text-align: left;}',
             '.helper_container * {color: black !important; overflow: visible;}',
             '.helper_container p {}',
             '.helper_container button {background: white; border-radius: 3px; border: #6C0 solid 1px; margin: 2px; cursor: pointer; box-shadow: 1px 1px 0px #aaa;}',
