@@ -1,5 +1,7 @@
+﻿#! python3
 import urllib.request
 from urllib.request import urlopen
+from urllib.error import HTTPError
 import urllib.parse
 import os, shutil, sys
 import re
@@ -63,11 +65,18 @@ def read(sFile=None) -> '2-tuple of lists':
 
 def download(sName, sUrl, target):
     filepath = os.path.join(target, re.sub(r'[\\\/]', ' ', sName));
-    mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
-    print('已下载：' + os.path.abspath(mp3[0]))
+    try:
+        mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
+        print('已下载：' + os.path.abspath(mp3[0]))
+    except HTTPError as e:
+        print('找不到歌曲地址： ' + sName)
+        global aErrorFile;
+        aErrorFile.append(sName);
 
 def main():
     print('程序运行开始');
+    global aErrorFile;
+    aErrorFile = [];
     target = sys.argv[0] if sys.argv[0] else os.getcwd();
     target = target if os.path.isdir(target) else os.path.split(target)[0];
     # target is current directory then
@@ -89,6 +98,7 @@ def main():
     for x in zip(aNames, aUrls):
         download(*x, target);
     print('下载已完成。');
+    print('以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
     input('按回车键退出。');
     
 main();
