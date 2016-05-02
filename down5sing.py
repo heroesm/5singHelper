@@ -7,6 +7,7 @@ import os, shutil, sys
 import re
 import json
 from time import time
+import base64
 
 doc = '''\
 input.txt中接受两种形式的输入文本：一种为点击插件的“查看下载地址”按钮后显现的 歌曲名 歌曲地址 列表组成的多行字符串（一般来说即为直接将该窗格内所有内容复制得到的内容，只复制地址行也可以下载，这时文件名会从地址中获取）；第二种为点击插件的导出歌曲按钮后显现的由歌曲ID和类型组成的单行字符串。
@@ -22,6 +23,27 @@ input.txt中接受两种形式的输入文本：一种为点击插件的“查�
     yc$1234567$fc$9998765$bz$1111111
 ''';
 
+
+def fix(aIndex):
+    sUrl = 'http://5sing.kugou.com/' + aIndex[0] + '/' + aIndex[1] + '.html'
+    with urlopen(sUrl) as page:
+        while (1):
+            line = page.readline()
+            if (not line or b'ticket' in line): break
+    data = re.search(rb'ticket.+?:.*?[\'"](.+)[\'"]', line).group(1)
+    data = json.loads(base64.b64decode(data).decode('utf-8'))
+    return data['file'];
+
+def download(sName, sUrl, aIndex, target):
+    filepath = os.path.join(target, re.sub(r'[\\\/]', ' ', sName));
+    try:
+        mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
+        print('已下载：' + os.path.abspath(mp3[0]))
+    except HTTPError as e:
+        print('找不到歌曲地址： ' + sName)
+        global aErrorFile;
+        aErrorFile.append((aIndex, sName));
+
 def read(sFile=None) -> '2-tuple of lists':
     if sFile == None:
         sInfo = input('请输入要下载的歌曲信息，以回车键结束：');
@@ -34,6 +56,7 @@ def read(sFile=None) -> '2-tuple of lists':
                 sInfo = file.read();
     result = re.search(r'^\s*((fc|yc|bz)\$\d+(\$(fc|yc|bz)\$\d+)*)\s*$', sInfo);
     if result:
+        # utilise 5sing api to query with ordinal number
         values = {
             'songinfo': result.group(1),
             '_': str(int(time()*1000))
@@ -49,7 +72,10 @@ def read(sFile=None) -> '2-tuple of lists':
         for x in aSongs:
             aNames.append(x['songname'] + x['sign'][-4:]);
             aUrls.append(x['sign']);
+        aIndices = re.findall(r'(fc|yc|vz)\$(\d+)', result.group(1));
+        # [('fc', '123434'), ...]
     else:
+        # download from url directly
         delimiter = sInfo.find('http://');
         r1 = re.compile(r'^\s*(\S.*?)\s*$', re.M);
         aNames = r1.findall(sInfo[:delimiter]);
@@ -61,17 +87,8 @@ def read(sFile=None) -> '2-tuple of lists':
             else: aNames[i:] = [aUrls[i][1]];
             aUrls[i] = aUrls[i][0];
             i += 1;
-    return (aNames, aUrls);
-
-def download(sName, sUrl, target):
-    filepath = os.path.join(target, re.sub(r'[\\\/]', ' ', sName));
-    try:
-        mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
-        print('已下载：' + os.path.abspath(mp3[0]))
-    except HTTPError as e:
-        print('找不到歌曲地址： ' + sName)
-        global aErrorFile;
-        aErrorFile.append(sName);
+        aIndices = [None for x in range(n2)];
+    return (aNames, aUrls, aIndices);
 
 def main():
     print('程序运行开始');
@@ -82,12 +99,13 @@ def main():
     # target is current directory then
     sFile = os.path.join(target, 'input.txt')
     if os.path.isfile(sFile):
-        aNames, aUrls = read(sFile);
+        aNames, aUrls, aIndices = read(sFile);
     else:
         print('找不到歌曲信息文件，请将存有歌曲信息的文件以文件名 input.txt 保存到脚本的同目录下。');
         print(doc);
         print('转为手动信息输入模式。')
-        aNames, aUrls = read();
+        aNames, aUrls, aIndices = read();
+    assert(len(aNames) == len(aUrls) == len(aIndices));
     print('歌曲信息读取完成。');
     print('将要下载：');
     print(*aNames, sep=' , ');
@@ -95,10 +113,23 @@ def main():
     if not os.path.isdir(target):
         os.mkdir(target);
     print('正在下载……');
-    for x in zip(aNames, aUrls):
+    for x in zip(aNames, aUrls, aIndices):
         download(*x, target);
-    print('下载已完成。');
-    print('以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
+    print('\n下载已完成。');
+    print('\n以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
+    print('\n尝试通过网页搜索下载地址……');
+    aError = aErrorFile;
+    aErrorFile = [];
+    for x in aError:
+        if (x[0]):
+            sUrl = fix(x[0]);
+            download(x[1], sUrl, x[0], target);
+        else:
+            aErrorFile.append(x);
+    if (aErrorFile):
+        print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n'); 
+    else:
+        print('\n搜索结束，所有歌曲下载成功。');
     input('按回车键退出。');
     
 main();
