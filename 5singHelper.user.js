@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.3
+// @version     1.0.4
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -48,6 +48,7 @@ function main(){
         checkSetting: checkSetting,
         jsonp: jsonp,
         adjust: adjust,
+        fix: fix,
         search: search,
         createOption: createOption,
         confirmOption: confirmOption,
@@ -208,6 +209,32 @@ function main(){
                 break;
         }
     }
+    
+    function fix(Song){
+        notify('地址错误，尝试下载网页更新地址……');
+        var sType = Song.type;
+        var s
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 3000;
+        xhr.ontimeout = xhr.onerror = function(e){
+            notify('地址更新失败', 3000);
+        };
+        xhr.onload = function(e){
+            var data = xhr.response;
+            data = /ticket["']\s*:\s*(["'])(.+)\1/.exec(data)[2];
+            data = JSON.parse(atob(data));
+            Song.src = data.file;
+            if(wsingHelper.aSongs[wsingHelper.player.playing] == Song){
+                var audio = wsingHelper.player.audio;
+                audio.src = Song.src;
+                audio.load();
+                audio.play();
+                notify('地址更新成功', 3000);
+            }
+        }
+        xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html')
+        xhr.send();
+    }
 
     function search(sKey, sSite, sType){
         var sURI = encodeURIComponent( (sType?sType:'') + sKey +' site:5sing.kugou.com');
@@ -233,8 +260,8 @@ function main(){
             '<h3>设置区</h3>',
             '<div><ul class="helper_left">',
             '    <li title="是否允许5sing本身的自动播放行为，在打开新网页时生效">自动播放：<select id="helper_opt_autoplay">',
-            '        <option value="0" selected>否</option>',
-            '        <option value="1">是</option>',
+            '        <option value="0" selected>禁止</option>',
+            '        <option value="1">允许</option>',
             '    </select></li>',
             '    <li title="设置插件开关和主面板放置于网页的哪个角落">插件位置：<select id="helper_opt_pos" value="1">',
             '        <option value="1">左上</option>',
@@ -1097,6 +1124,9 @@ function main(){
         });
         audio.addEventListener('volumechange',function(e){
             localStorage.helper_volume = wsingHelper.player.audio.volume.toFixed(2) + '';
+        });
+        audio.addEventListener('error', function(e){
+            wsingHelper.fix(wsingHelper.aSongs[wsingHelper.player.playing]);
         });
         var t = localStorage.helper_pos;
         if(/^[1234]$/.test(t))
