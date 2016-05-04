@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.4
+// @version     1.0.5
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -736,7 +736,7 @@ function main(){
         else if(/:\/\/5sing\.kugou\.com\/\w+\/[a-z]+(?:\/\d+)\.html/.test(window.location.href)){
             //in singer space, using JSONP to load songs information remotely
             var  aA= [], aB= [], t;
-            aA = document.$('.song_list').$$('a[href^="http"][href$="html"]');
+            aA = document.$('.song_list, .per_list').$$('a[href^="http"][href$="html"]');
             for(var i = 0; i< aA.length; i++){
                 if(aA[i].href!= t){
                     t = aA[i].href;
