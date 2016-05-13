@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.5
+// @version     1.0.6
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -226,10 +226,15 @@ function main(){
             Song.src = data.file;
             if(wsingHelper.aSongs[wsingHelper.player.playing] == Song){
                 var audio = wsingHelper.player.audio;
-                audio.src = Song.src;
-                audio.load();
-                audio.play();
-                notify('地址更新成功', 3000);
+                if(audio.src == Song.src){
+                    notify('歌曲地址无效', 3000);
+                }
+                else{
+                    audio.src = Song.src;
+                    audio.load();
+                    audio.play();
+                    notify('地址更新成功', 3000);
+                }
             }
         }
         xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html')
