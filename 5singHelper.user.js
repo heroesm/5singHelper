@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.6
+// @version     1.0.7
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -620,6 +620,7 @@ function main(){
             '<div class="helper_description helper_clearL">'+ song.description +'</div>'
         ].join('\n');
         if(wsingHelper.player.audio.src.slice(-4) == '.wma'){
+            notify('不支持的wma格式', 3000);
             wsingHelper.container.$('.helper_description').innerHTML = '错误：不支持播放wma格式文件';
             return false;
         }
@@ -1131,7 +1132,9 @@ function main(){
             localStorage.helper_volume = wsingHelper.player.audio.volume.toFixed(2) + '';
         });
         audio.addEventListener('error', function(e){
-            wsingHelper.fix(wsingHelper.aSongs[wsingHelper.player.playing]);
+            if(this.src != wma){
+               wsingHelper.fix(wsingHelper.aSongs[wsingHelper.player.playing]);
+            }
         });
         var t = localStorage.helper_pos;
         if(/^[1234]$/.test(t))

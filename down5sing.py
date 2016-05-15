@@ -116,20 +116,21 @@ def main():
     for x in zip(aNames, aUrls, aIndices):
         download(*x, target);
     print('\n下载已完成。');
-    print('\n以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
-    print('\n尝试通过网页搜索下载地址……');
-    aError = aErrorFile;
-    aErrorFile = [];
-    for x in aError:
-        if (x[0]):
-            sUrl = fix(x[0]);
-            download(x[1], sUrl, x[0], target);
-        else:
-            aErrorFile.append(x);
     if (aErrorFile):
-        print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n'); 
-    else:
-        print('\n搜索结束，所有歌曲下载成功。');
+        print('\n以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
+        print('\n尝试通过网页搜索下载地址……');
+        aError = aErrorFile;
+        aErrorFile = [];
+        for x in aError:
+            if (x[0]):
+                sUrl = fix(x[0]);
+                download(x[1], sUrl, x[0], target);
+            else:
+                aErrorFile.append(x);
+        if (aErrorFile):
+            print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n'); 
+        else:
+            print('\n搜索结束，所有歌曲下载成功。');
     input('按回车键退出。');
     
 main();
