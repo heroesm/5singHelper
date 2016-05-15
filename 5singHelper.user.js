@@ -1132,7 +1132,7 @@ function main(){
             localStorage.helper_volume = wsingHelper.player.audio.volume.toFixed(2) + '';
         });
         audio.addEventListener('error', function(e){
-            if(this.src != wma){
+            if(wsingHelper.player.audio.src.slice(-4) != '.wma'){
                wsingHelper.fix(wsingHelper.aSongs[wsingHelper.player.playing]);
             }
         });
