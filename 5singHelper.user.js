@@ -792,7 +792,8 @@ function main(){
                 fetchMore({}, 999999999, t);
             }catch(e){notify('载入被取消');}
         }
-        else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href)){
+        else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href) ||
+               /:\/\/5sing\.kugou\.com\/m\/Song\/detail\/(?:yc|fc|bz)\/\d+(\.html)?/i.test(window.location.href)){
             //in mobile page
             var src = document.$('audio[src]').src;
             wsingHelper.aSongs[0]= {
