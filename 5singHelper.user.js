@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.7
+// @version     1.0.8
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -1269,10 +1269,6 @@ function main(){
     }
 
     init();
-    window.addEventListener('load',function(){
-        window.globals? window.globals.InitMessage = function(){} : false;
-    });
-    //make these variables accessible in target page
     window.wsingHelper = wsingHelper;
 }
 
