@@ -35,7 +35,7 @@ def fix(aIndex):
     return data['file'];
 
 def download(sName, sUrl, aIndex, target):
-    filepath = os.path.join(target, re.sub(r'[\\\/]', ' ', sName));
+    filepath = os.path.join(target, re.sub(r'[\\/:*?<>"|\t]', ' ', sName));
     try:
         mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
         print('已下载：' + os.path.abspath(mp3[0]))
