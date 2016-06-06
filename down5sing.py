@@ -23,6 +23,7 @@ input.txt中接受两种形式的输入文本：一种为点击插件的“查�
     yc$1234567$fc$9998765$bz$1111111
 ''';
 
+count = 0;
 
 def fix(aIndex):
     sUrl = 'http://5sing.kugou.com/' + aIndex[0] + '/' + aIndex[1] + '.html'
@@ -35,10 +36,14 @@ def fix(aIndex):
     return data['file'];
 
 def download(sName, sUrl, aIndex, target):
+    global count;
     filepath = os.path.join(target, re.sub(r'[\\/:*?<>"|\t]', ' ', sName));
+    while (os.path.exists(filepath)):
+        filepath = re.sub(r'(\.\w+)?$', r'_\1', filepath);
     try:
         mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
         print('已下载：' + os.path.abspath(mp3[0]))
+        count += 1;
     except HTTPError as e:
         print('找不到歌曲地址： ' + sName)
         global aErrorFile;
@@ -91,6 +96,7 @@ def read(sFile=None) -> '2-tuple of lists':
     return (aNames, aUrls, aIndices);
 
 def main():
+    global count;
     print('程序运行开始');
     global aErrorFile;
     aErrorFile = [];
@@ -131,6 +137,6 @@ def main():
             print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n'); 
         else:
             print('\n搜索结束，所有歌曲下载成功。');
-    input('按回车键退出。');
+    input('总共下载歌曲 ' + str(count) + ' 首，按回车键退出。');
     
 main();
