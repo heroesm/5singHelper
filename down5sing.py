@@ -3,7 +3,7 @@ import urllib.request
 from urllib.request import urlopen
 from urllib.error import HTTPError
 import urllib.parse
-import os, shutil, sys
+import os, sys
 import re
 import json
 from time import time
@@ -54,7 +54,7 @@ def read(sFile=None) -> '2-tuple of lists':
         sInfo = input('请输入要下载的歌曲信息，以回车键结束：');
     else:
         try:
-            with open(sFile, 'r', encoding='utf-8') as file:
+            with open(sFile, 'r', encoding='utf-8-sig') as file:
                 sInfo = file.read();
         except UnicodeDecodeError:
             with open(sFile, 'r') as file:
@@ -84,7 +84,7 @@ def read(sFile=None) -> '2-tuple of lists':
         delimiter = sInfo.find('http://');
         r1 = re.compile(r'^\s*(\S.*?)\s*$', re.M);
         aNames = r1.findall(sInfo[:delimiter]);
-        r2 = re.compile(r'^\s*(https?://.+/([^/.]+(\.mp3|wma)))\s*$', re.M);
+        r2 = re.compile(r'^\s*(https?://.+/([^/]+?(\.mp3|wma)))\s*$', re.M);
         aUrls = r2.findall(sInfo[delimiter:]);
         n1, n2, i = len(aNames), len(aUrls), 0;
         while i < n2:
