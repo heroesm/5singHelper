@@ -1,15 +1,28 @@
-功能简介：
+# 5sing助手
+一个用于改善5sing听歌体验的脚本（插件）。
 
-告别flash。将5sing播放器替换为html5播放，可禁止5sing的自动播放。
-可读取各5sing页面中的歌曲列表到独立面板中，支持页面包括个人中心、歌手空间、独立播放页面等，并支持在个人中心和个人空间中远程载入当前列表中没有列出的歌曲。统一样式，独立播放，支持多种播放控制，可选取歌曲以显示下载链接或在5sing独立播放页中播放。
-支持使用谷歌、百度进行5sing站内搜索的功能，支持导入、导出列表中的歌曲（配合5sing原生的独立播放页可实现对歌曲列表的任意编辑操作），提供可配置的参数及热键，使用localStorage方式将所选参数存在本地。
+## 安装
+### firefox浏览器：
+* 需先安装用户脚本管理插件，如[greasymonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)。
+* 在脚本的[GreasyFork页面](https://greasyfork.org/en/scripts/17648-5sing%E5%8A%A9%E6%89%8B)中点击 Install this script 或 安装此脚本 以安装。
 
-代码由纯原生javascript写成，没有用到greasemonkey的特权。脚本在firefox的greasemonkey上编写并经过长期使用测试，在chrome下通过tampermonkey实测也可使用该脚本，就是界面要难看一点……
-需要注明的一点是，该插件所能播放的歌曲格式取决于html5播放器对歌曲格式的支持，一般来说，mp3文件播放都没有问题，但在遇到5sing中偶然出现的wma格式歌曲时则无法播放（此时仍然可以显示歌曲地址等信息），5sing网络出现问题（在5sing很常见）或本身歌曲链接有问题时（5sing有时候会莫名出现这种链接不对的情况）也无法播放（从1.0.4版本开始插件会自动尝试修复该问题）。
+### Chrome及类似浏览器：
+* 需先安装用户脚本管理插件，如[tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)。
+* 在脚本的[GreasyFork页面](https://greasyfork.org/en/scripts/17648-5sing%E5%8A%A9%E6%89%8B)中点击 Install this script 或 安装此脚本 以安装。
 
-[插件截图见此：
-https://github.com/heroesm/5singHelper/wiki/%E6%8F%92%E4%BB%B6%E6%88%AA%E5%9B%BE](https://github.com/heroesm/5singHelper/wiki/%E6%8F%92%E4%BB%B6%E6%88%AA%E5%9B%BE)。
+## 功能
+* 将flash播放替换为html5播放。
+* 可选择禁止5sing页面的自动播放。
+* 读取当前5sing页面中可能包含的歌曲列表信息，在独立的插件面板中进行播放控制；支持继续载入当前页面中未列出的相关歌曲、选择歌曲显示下载链接，等各种我想要的功能；支持大部分5sing页面。
+* 与5sing的独立播放页整合，插件与5sing独立播放页相配合可实现对歌曲列表的编辑操作。
 
-[github地址：https://github.com/heroesm/5singHelper](https://github.com/heroesm/5singHelper)
+## 备注
+* 脚本由纯js写成，未用到第三方库，未用到greasemonkey特权函数。
+* 该插件所能播放的歌曲格式取决于浏览器对歌曲格式的支持，即，5sing中偶尔出现的wma文件通常无法播放；当5sing网络出现问题或歌曲链接配置错误时，也可能导致无法播放。
+* Github项目主页中存有可批量下载歌曲的配套python脚本。
+* 问题反馈与建议可以提交于[GreasyFork](https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B/feedback)或Github。
 
-[greasyfork地址：https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B](https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B)
+## 参见
+* [插件截图](https://github.com/heroesm/5singHelper/wiki/%E6%8F%92%E4%BB%B6%E6%88%AA%E5%9B%BE)（截取于早期版本中，界面与目前版本有细微不同）
+* [github地址](https://github.com/heroesm/5singHelper)
+* [greasyfork地址](https://greasyfork.org/zh-CN/scripts/17648-5sing%E5%8A%A9%E6%89%8B)
