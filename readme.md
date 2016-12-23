@@ -3,7 +3,7 @@
 
 ## 安装
 ### firefox浏览器：
-* 需先安装用户脚本管理插件，如[greasymonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)。
+* 需先安装用户脚本管理插件，如[greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)。
 * 在脚本的[GreasyFork页面](https://greasyfork.org/en/scripts/17648-5sing%E5%8A%A9%E6%89%8B)中点击 Install this script 或 安装此脚本 以安装。
 
 ### Chrome及类似浏览器：
@@ -13,7 +13,7 @@
 ## 功能
 * 将flash播放替换为html5播放。
 * 可选择禁止5sing页面的自动播放。
-* 读取当前5sing页面中可能包含的歌曲列表信息，在独立的插件面板中进行播放控制；支持继续载入当前页面中未列出的相关歌曲、选择歌曲显示下载链接，等各种我想要的功能；支持大部分5sing页面。
+* 读取当前5sing页面中可能包含的歌曲列表信息，在独立的插件面板中进行播放控制；支持继续载入当前页面中未列出的相关歌曲、选择歌曲显示下载链接等，各种我想要的功能；支持大部分5sing页面。
 * 与5sing的独立播放页整合，插件与5sing独立播放页相配合可实现对歌曲列表的编辑操作。
 
 ## 备注
