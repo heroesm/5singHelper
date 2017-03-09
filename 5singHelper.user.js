@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.8
+// @version     1.0.9
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -544,6 +544,8 @@ function main(){
             if(!window.$wsp) return;
             window.$wsp.htmlMediaElement.dispatchEvent(new Event('pause'));
         },5000);
+        // a new playing mechanism in 5sing will detect the 'h5' capability by testing the presence of global variable Worker; if Worker present, it will create autoplaying audio element which is hard to stop by external script; if not, it shall roll back to elder mechanism.
+        window.Worker = undefined;
     }
 
     function setSongCookies(sSongs){
