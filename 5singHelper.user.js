@@ -799,14 +799,14 @@ function main(){
             //in mobile page
             var src = document.$('audio[src]').src;
             wsingHelper.aSongs[0]= {
-                id: window.songID,
+                id: window.pageData.songId,
                 src: src,
-                type: window.kind,
-                space: 'http://5sing.kugou.com/' + document.$('.m_head').href.match(/(\d+)\.html/)[1],
-                singer: document.title.match(/(.+?) - (.+?) -/)[2],
-                avatar: document.$('.m_head img').src,
-                songName: document.title.match(/(.+?) - (.+?) -/)[1],
-                description: document.$('.info_txt').innerHTML
+                type: window.pageData.songType,
+                space: 'http://5sing.kugou.com/' + window.pageData.singerId,
+                singer: document.$('.hd .author').textContent,
+                avatar: document.$('.cd-wrap .bd img').src,
+                songName: document.$('.hd .songname').textContent,
+                description: ''
             };
             notify('载入完成', 3000);
         }
@@ -1180,8 +1180,8 @@ function main(){
             '.helper_toggle *{top: 0px; right: 0px; bottom: 0px; left: 0px; margin: 4px; border-radius: 10px; position: absolute; background: white}',
             '.helper_toggle.helper_activate {background: rgba(98, 183, 102, 1); box-shadow: 0px 0px 3px #aaa;}',
             '.helper_container {position: fixed; z-index: 99999; top: 60px; left: 50px; background: white; border: 1px solid; overflow: visible; font: 12px/1.5 "Microsoft Yahei",Tahoma,Helvetica,Arial,sans-serif; color: black; text-align: left;}',
-            '.helper_container * {color: black !important; overflow: visible;}',
-            '.helper_container p {}',
+            '.helper_container * {color: black !important; overflow: visible; visibility: visible}',
+            '.helper_container body, form, p, ol, ul, p, h1, h2, h3, h4, li, dt, dd, dl, li {padding: 0px; margin: 0px}',
             '.helper_container button {background: white; border-radius: 3px; border: #6C0 solid 1px; margin: 2px; cursor: pointer; box-shadow: 1px 1px 0px #aaa;}',
             '.helper_container button.helper_selected {background-color: #6c0;}',            
             '.helper_container ol,ul {white-space: nowrap; list-style: none;}',
