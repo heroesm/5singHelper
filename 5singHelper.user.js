@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.9
+// @version     1.0.9.1
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -1180,7 +1180,7 @@ function main(){
             '.helper_toggle *{top: 0px; right: 0px; bottom: 0px; left: 0px; margin: 4px; border-radius: 10px; position: absolute; background: white}',
             '.helper_toggle.helper_activate {background: rgba(98, 183, 102, 1); box-shadow: 0px 0px 3px #aaa;}',
             '.helper_container {position: fixed; z-index: 99999; top: 60px; left: 50px; background: white; border: 1px solid; overflow: visible; font: 12px/1.5 "Microsoft Yahei",Tahoma,Helvetica,Arial,sans-serif; color: black; text-align: left;}',
-            '.helper_container * {color: black !important; overflow: visible; visibility: visible}',
+            '.helper_container * {color: black !important; overflow: visible; visibility: unset}',
             '.helper_container body, form, p, ol, ul, p, h1, h2, h3, h4, li, dt, dd, dl, li {padding: 0px; margin: 0px}',
             '.helper_container button {background: white; border-radius: 3px; border: #6C0 solid 1px; margin: 2px; cursor: pointer; box-shadow: 1px 1px 0px #aaa;}',
             '.helper_container button.helper_selected {background-color: #6c0;}',            
