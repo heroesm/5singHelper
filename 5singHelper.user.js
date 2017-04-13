@@ -5,25 +5,24 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.0.9.1
+// @version     1.1.0
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
 
-//将失效的fc.5sing.com 重定向到5sing.kugou.com/fc 的功能无法实现，因为目前版本的greasemonkey出于安全性考虑禁止在包括about:neterror的about:页面中执行脚本。以后可能会写firefox拓展解决重定向的问题。
-/*if (document.documentURI.search('about:neterror') ! = -1) {
-    console.log(1);
-}
-if (window.location.host.indexOf('fc.5sing.com')! = -1){
-    location.replace( location.href.replace(/fc\.5sing\.com\/(\d+)\.html/,'5sing.kugou.com/fc/$1.html'));
-}
-*/
-
 function main(){
     //compatible with nonstrict mode
     "use strict";
+    function SongIndex(id){
+        this.id = id;
+    }
+    SongIndex.prototype = {
+        get song(){return wsingHelper.mSongs[this.id];},
+        set song(x){wsingHelper.mSongs[this.id] = x;}
+    };
     var wsingHelper = {
-        aSongs: [],
+        aIndex: [],
+        mSongs: {},
         aJSON: [],
         aJSON2: [],
         nList: 1,
@@ -130,7 +129,7 @@ function main(){
                 notifier.style.display = 'none';
                 notifier.textContent = '提示：';
             }, nTime);
-        };
+        }
     }
 
 
@@ -157,7 +156,7 @@ function main(){
             else if((key = wsingHelper.player.shortcut4) && (e.key && e.key.toLowerCase() == key) || e.code == 'Key' + key.toUpperCase()){
                 try{
                     document.$('.helper_more').click();
-                }catch(e){}
+                }catch(e){console.log(e);}
             }
             else if(wsingHelper.player.control == '1'){
                 //play previous song
@@ -212,8 +211,6 @@ function main(){
     
     function fix(Song){
         notify('地址错误，尝试下载网页更新地址……');
-        var sType = Song.type;
-        var s
         var xhr = new XMLHttpRequest();
         xhr.timeout = 3000;
         xhr.ontimeout = xhr.onerror = function(e){
@@ -224,7 +221,7 @@ function main(){
             data = /ticket["']\s*:\s*(["'])(.+)\1/.exec(data)[2];
             data = JSON.parse(atob(data));
             Song.src = data.file;
-            if(wsingHelper.aSongs[wsingHelper.player.playing] == Song){
+            if(wsingHelper.aIndex[wsingHelper.player.playing].song == Song){
                 var audio = wsingHelper.player.audio;
                 if(audio.src == Song.src){
                     notify('歌曲地址无效', 3000);
@@ -236,8 +233,8 @@ function main(){
                     notify('地址更新成功', 3000);
                 }
             }
-        }
-        xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html')
+        };
+        xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html');
         xhr.send();
     }
 
@@ -561,19 +558,24 @@ function main(){
 
     function exportList(){
         var sOut = '';
-        for(var i = 0; i< wsingHelper.aSongs.length; i++){
-            sOut+= '$'+ wsingHelper.aSongs[i].type + '$' + wsingHelper.aSongs[i].id;
+        for(var i = 0; i< wsingHelper.aIndex.length; i++){
+            sOut+= '$'+ wsingHelper.aIndex[i].song.type + '$' + wsingHelper.aIndex[i].song.id;
         }
         prompt('请复制下面输入框中的字符串以保存歌曲信息:\n\n', sOut.substring(1));
     }
 
     function importList(){
         var sIn = prompt('请将此前导出的歌曲信息粘贴入下面的输入框:\n\n');
-        !!sIn && jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + sIn, function(res){
+        var aIndex = sIn.match(/(yc|fc|bz)\$\d+/ig);
+        wsingHelper.aIndex = [];
+        for (var i=0; i<aIndex.length; i++){
+            wsingHelper.aIndex.push(new SongIndex(aIndex[i]));
+        }
+        !!aIndex && jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + sIn, function(res){
             wsingHelper.aJSON = res;
             for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
                 Song = wsingHelper.aJSON[i];
-                wsingHelper.aSongs[i] = {
+                var song = {
                     id: Song.id,
                     src: Song.sign,
                     type: Song.songtype,
@@ -583,8 +585,9 @@ function main(){
                     songName: Song.songname,
                     description: ''
                 };
+                var sIndex = song.type + '$' + song.id;
+                wsingHelper.mSongs[sIndex] = song;
             }
-            wsingHelper.aSongs = wsingHelper.aSongs.slice(0, i);
             wsingHelper.container.olSong && createList(wsingHelper.container.olSong);
         });
     }
@@ -599,22 +602,22 @@ function main(){
     }
 
     function loadSong(nIndex){
-        if(nIndex< 0 || nIndex>= wsingHelper.aSongs.length){
+        if(nIndex< 0 || nIndex>= wsingHelper.aIndex.length){
             if(wsingHelper.player.repeat === false)
                 return false;
             else 
-                nIndex = (nIndex < 0 ? wsingHelper.aSongs.length- 1 : 0);
+                nIndex = (nIndex < 0 ? wsingHelper.aIndex.length - 1 : 0);
         }
         try{
             var li = wsingHelper.container.olSong.children[wsingHelper.player.playing];
             li.className = li.className.replace(/ ?helper_player_playing/g,'');
-        }catch(e){};
-        wsingHelper.player.audio.src = wsingHelper.aSongs[nIndex].src;
+        }catch(e){console.log(e);}
+        wsingHelper.player.audio.src = wsingHelper.aIndex[nIndex].song.src;
         wsingHelper.player.audio.load();
         wsingHelper.player.audio.play();
         wsingHelper.player.playing = nIndex;
         wsingHelper.container.olSong.children[nIndex].className+= ' helper_player_playing';
-        var info = wsingHelper.container.$('.helper_info'), song = wsingHelper.aSongs[nIndex];
+        var info = wsingHelper.container.$('.helper_info'), song = wsingHelper.aIndex[nIndex].song;
         info.innerHTML = [
             '<h3 class="helper_song"><a href="http://5sing.kugou.com/' + song.type + '/'+ song.id +'.html">'+ song.songName +'</a></h3>',
             '<h3 class="helper_singer"><a href="'+ song.space +'">'+ song.singer +'</a></h3>',
@@ -637,8 +640,9 @@ function main(){
             e.preventDefault();
             wsingHelper.loadSong(e.currentTarget.index);
         }
-        for(var i = 0, li; i< wsingHelper.aSongs.length;i++){
-            var t = wsingHelper.aSongs[i];
+        for(var i = 0, li; i<wsingHelper.aIndex.length; i++){
+            var t = wsingHelper.aIndex[i].song;
+            if (!t) break
             li = coin('li');
             li.innerHTML= [
                 '<a href="'+ t.src +'">',
@@ -657,7 +661,7 @@ function main(){
             li = wsingHelper.coin('li');
             try{
                 checked = wsingHelper.container.aCheck[i].checked;
-            }catch(e){checked = false};
+            }catch(e){checked = false;}
             wsingHelper.container.aCheck[i] = input = coin('input');
             input.type = 'checkbox';
             input.checked = checked;
@@ -677,7 +681,7 @@ function main(){
         wsingHelper.container.olSong = newol;
         wsingHelper.container.olCheck = olCheck;
         try{
-            wsingHelper.aSongs[wsingHelper.player.playing].src == wsingHelper.player.audio.src?
+            wsingHelper.aIndex[wsingHelper.player.playing].song.src == wsingHelper.player.audio.src?
                 (newol.children[wsingHelper.player.playing].className+= ' helper_player_playing') : (wsingHelper.player.playing= -1);
         }catch(e){}
         return {ol1: olCheck, ol2: newol};
@@ -685,7 +689,8 @@ function main(){
 
     function searchSong() {
         notify('载入中……');
-        wsingHelper.aSongs = [];
+        wsingHelper.aIndex = [];
+        wsingHelper.mSongs = {};
         var t;
         if(window.location.href.indexOf('://5sing.kugou.com/my/')!== -1){
             //in personal center
@@ -696,7 +701,7 @@ function main(){
             else{
                 for (var i = 0, divSong; i < wsingHelper.aSongsDiv.length; i++) {
                     divSong = wsingHelper.aSongsDiv[i];
-                    wsingHelper.aSongs[i] = {
+                    var song = {
                         id: divSong.$('.m_player_name').firstChild.href.match(/\/(\d+)\./)[1],
                         src: divSong.$('.m_player_btn_ready').getAttribute('onclick').match(/http:\/\/[^'"]+\.(mp3|m4a)/)[0],
                         type: divSong.$('.m_player_name').firstChild.href.match(/\/(fc|yc|bz)\//)[1],
@@ -706,27 +711,31 @@ function main(){
                         songName: divSong.$('.m_player_name').textContent,
                         description: divSong.parentNode.$('.msg_list_txt').children[0].textContent
                     };
+                    var sIndex = song.type + '$' + song.id;
+                    wsingHelper.aIndex.push(new SongIndex(sIndex));
+                    wsingHelper.mSongs[sIndex] = song;
                     if(!!(t = divSong.parentNode.$('.msg_list_txt').children[1]))
-                        wsingHelper.aSongs[i].description = t.textContent;
+                        wsingHelper.aIndex[i].song.description = t.textContent;
                 }
                 notify('载入完成', 3000);
             }
         }
         else if(window.location.href.indexOf('://5sing.kugou.com/fm/m')!== -1){
             //in independent playing page, using JSONP to load songs information remotely
-            var  aA= [], aB= [], t;
-            aA = document.$('#mCSB_1').$$('a[songinfo]');
-            for(var i = 0; i< aA.length; i++){
-                if(aA[i].getAttribute('songinfo')!= t){
-                    t = aA[i].getAttribute('songinfo');
-                    aB.push(t);
+            var  a1 = [], aIndex=[], sIndex;
+            a1 = document.$('#mCSB_1').$$('a[songinfo]');
+            for(var i = 0; i< a1.length; i++){
+                if(a1[i].getAttribute('songinfo')!= sIndex){
+                    sIndex = a1[i].getAttribute('songinfo');
+                    aIndex.push(sIndex);
+                    wsingHelper.aIndex.push(new SongIndex(sIndex));
                 }
             }
-            jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aB.join('$'), function(res){
+            jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aIndex.join('$'), function(res){
                 wsingHelper.aJSON = res;
                 for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
                     Song = wsingHelper.aJSON[i];
-                    wsingHelper.aSongs[i] = {
+                    var song = {
                         id: Song.id,
                         src: Song.sign,
                         type: Song.songtype,
@@ -736,6 +745,8 @@ function main(){
                         songName: Song.songname,
                         description: ''
                     };
+                    var sIndex = song.type + '$' + song.id;
+                    wsingHelper.mSongs[sIndex] = song;
                 }
                 wsingHelper.container.olSong && createList(wsingHelper.container.olSong);
                 notify('载入完成', 3000);
@@ -743,19 +754,21 @@ function main(){
         }
         else if(/:\/\/5sing\.kugou\.com\/\w+\/[a-z]+(?:\/\d+)\.html/.test(window.location.href)){
             //in singer space, using JSONP to load songs information remotely
-            var  aA= [], aB= [], t;
-            aA = document.$('.song_list, .per_list').$$('a[href^="http"][href$="html"]');
-            for(var i = 0; i< aA.length; i++){
-                if(aA[i].href!= t){
-                    t = aA[i].href;
-                    aB.push(t.match(/(fc|yc|bz)\/\d+/)[0].replace('/','$'));
+            var  a1= [], aIndex= [], sHref;
+            a1 = document.$('.song_list, .per_list').$$('a[href^="http"][href$="html"]');
+            for(var i = 0; i< a1.length; i++){
+                if(a1[i].href!= sHref){
+                    sHref = a1[i].href;
+                    var sIndex = sHref.match(/(fc|yc|bz)\/\d+/)[0].replace('/','$');
+                    aIndex.push(sIndex);
+                    wsingHelper.aIndex.push(new SongIndex(sIndex));
                 }
             }
-            jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aB.join('$'), function(res){
+            jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aIndex.join('$'), function(res){
                 wsingHelper.aJSON = res;
                 for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
                     Song = wsingHelper.aJSON[i];
-                    wsingHelper.aSongs[i] = {
+                    var song = {
                         id: Song.id,
                         src: Song.sign,
                         type: Song.songtype,
@@ -765,6 +778,8 @@ function main(){
                         songName: Song.songname,
                         description: ''
                     };
+                    var sIndex = song.type + '$' + song.id;
+                    wsingHelper.mSongs[sIndex] = song;
                 }
                 wsingHelper.container.olSong && createList(wsingHelper.container.olSong);
                 notify('载入完成', 3000);
@@ -773,7 +788,7 @@ function main(){
         else if(/:\/\/5sing\.kugou\.com\/(?:yc|fc|bz)\/\d+\.html/.test(window.location.href)){
             //in song page
             var Song = JSON.parse(atob(window.globals.ticket || window.pageOptions.ticket));
-            wsingHelper.aSongs[0]= {
+            var song = {
                 id: Song.songID,
                 src: Song.file,
                 type: Song.songType,
@@ -783,7 +798,10 @@ function main(){
                 songName: Song.songName,
                 description: (t = document.$('.lrc_info_clip'))? t.children[0].innerHTML: (t = document.$('.pl_lianxu'))? t.innerHTML: '未找到描述'
             };
-            wsingHelper.aSongs[0].description = wsingHelper.aSongs[0].description.replace(/<img.+?>/g,'');
+            song.description = song.description.replace(/<img.+?>/g, '');
+            var sIndex = song.type + '$' + song.id;
+            wsingHelper.mSongs[sIndex] = song;
+            wsingHelper.aIndex.push(new SongIndex(sIndex));
             notify('载入完成', 3000);
         }
         else if(/:\/\/5sing\.kugou\.com\/\w+(\/default\.html|\/)?(#|$)/.test(window.location.href)){
@@ -792,13 +810,16 @@ function main(){
             try{
                 t = parseInt(t.match(/^\s*[123]\s*/));
                 fetchMore({}, 999999999, t);
-            }catch(e){notify('载入被取消');}
+            }catch(e){
+                console.log(e);
+                notify('载入被取消');
+            }
         }
         else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href) ||
                /:\/\/5sing\.kugou\.com\/m\/Song\/detail\/(?:yc|fc|bz)\/\d+(\.html)?/i.test(window.location.href)){
             //in mobile page
             var src = document.$('audio[src]').src;
-            wsingHelper.aSongs[0]= {
+            var song = {
                 id: window.pageData.songId,
                 src: src,
                 type: window.pageData.songType,
@@ -808,6 +829,9 @@ function main(){
                 songName: document.$('.hd .songname').textContent,
                 description: ''
             };
+            var sIndex = song.type + '$' + song.id;
+            wsingHelper.mSongs[sIndex] = song;
+            wsingHelper.aIndex.push(new SongIndex(sIndex));
             notify('载入完成', 3000);
         }
         else{
@@ -821,31 +845,31 @@ function main(){
         locked = true;
         node.innerHTML = '载入中……';
         notify('载入中……');
-        var LastSong = wsingHelper.aSongs[wsingHelper.aSongs.length-1],
+        var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type == 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
-        jsonpp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + OwnerUserID + '&isPrev=1&isNext=0')
+        jsonpp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + window.OwnerUserID + '&isPrev=1&isNext=0')
         .then(function(res){
             var aJSON2 = wsingHelper.aJSON2 = res;
             if(aJSON2.length === 0){
                 locked = false;
                 return Promise.reject(1);
             }
-            var aSongs= [];
-            for(var i = 0; i< aJSON2.length; i++){
-                aSongs[i]= aJSON2[i].songType + '$' + aJSON2[i].id;
+            else {
+                var aIndex= [], sIndex;
+                for(var i = 0; i< aJSON2.length; i++){
+                    var sIndex = aJSON2[i].songType + '$' + aJSON2[i].id;
+                    aIndex.push(sIndex);
+                    wsingHelper.aIndex.push(new SongIndex(sIndex));
+                }
+                return jsonpp('http://service.5sing.kugou.com/song/find?songinfo=' + aIndex.join('$'));
             }
-            return jsonpp('http://service.5sing.kugou.com/song/find?songinfo=' + aSongs.join('$'));
         })
         .then(function(res){
             wsingHelper.aJSON = res;
-            var n;
-            for(n = 0; n< wsingHelper.aSongs.length; n++){
-                if(wsingHelper.aJSON[0].id === wsingHelper.aSongs[n].id) break;
-            }
             for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
                 Song = wsingHelper.aJSON[i];
-                wsingHelper.aSongs[n++]= {
+                var song = {
                     id: Song.id,
                     src: Song.sign,
                     type: Song.songtype,
@@ -855,6 +879,8 @@ function main(){
                     songName: Song.songname,
                     description: ''
                 };
+                var sIndex = song.type + '$' + song.id;
+                wsingHelper.mSong[sIndex] = song;
             }
             createList(wsingHelper.container.olSong);
             locked = false;
@@ -874,7 +900,7 @@ function main(){
         locked = true;
         node.innerHTML= '载入中……';
         notify('载入中……');
-        var LastSong = wsingHelper.aSongs[wsingHelper.aSongs.length-1],
+        var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type== 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
         //use jsonp via normal callback approach
@@ -886,11 +912,13 @@ function main(){
                 node.innerHTML= '已到达结尾';
             }
             else{
-                var aSongs= [];
+                var aIndex= [];
                 for(var i = 0; i< aJSON2.length; i++){
-                    aSongs[i]= aJSON2[i].songType + '$' + aJSON2[i].id;
+                    var sIndex = aJSON2[i].songType + '$' + aJSON2[i].id;
+                    aIndex.push(sIndex);
+                    wsingHelper.aIndex.push(new SongIndex(sIndex));
                 }
-                jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aSongs.join('$'),function(res){
+                jsonp('http://service.5sing.kugou.com/song/find?songinfo=' + aIndex.join('$'),function(res){
                     wsingHelper.aJSON = res;
                     if(res.length === 0){
                         locked = false;
@@ -898,13 +926,9 @@ function main(){
                         node.innerHTML= '出现错误，歌曲不存在';
                     }
                     else{
-                        var n;
-                        for(n = 0; n< wsingHelper.aSongs.length; n++){
-                            if(wsingHelper.aJSON[0].id === wsingHelper.aSongs[n].id) break;
-                        }
                         for (var i = 0, Song; i < wsingHelper.aJSON.length; i++) {
                             Song = wsingHelper.aJSON[i];
-                            wsingHelper.aSongs[n++]= {
+                            var song = {
                                 id: Song.id,
                                 src: Song.sign,
                                 type: Song.songtype,
@@ -914,6 +938,8 @@ function main(){
                                 songName: Song.songname,
                                 description: ''
                             };
+                            var sIndex = song.type + '$' + song.id;
+                            wsingHelper.mSongs[sIndex] = song;
                         }
                         createList(wsingHelper.container.olSong);
                         locked = false;
@@ -941,19 +967,19 @@ function main(){
                 notify('已到达结尾', 3000);
             }
             else{
-                //search in existed songs list to prevent repeat
-                for(i = 0; i< aData.length; i++){
-                    if(aData[i].Category == 1){
-                        for(n = 0; n< wsingHelper.aSongs.length; n++){
-                            if(aData[i].BelongId === wsingHelper.aSongs[n].id) break;
-                        }
-                        break;
-                    }
-                }
-                for(var Song; i < aData.length; i++) {
+                // search in existed songs list to prevent repeat
+                //for(i = 0; i< aData.length; i++){
+                //    if(aData[i].Category == 1){
+                //        for(n = 0; n< wsingHelper.aIndex.length; n++){
+                //            if(aData[i].BelongId === wsingHelper.aIndex[n].id) break;
+                //        }
+                //        break;
+                //    }
+                //}
+                for(var Song, i=0; i < aData.length; i++) {
                     if(aData[i].Category == 1){
                         Song = JSON.parse(aData[i].Content);
-                        wsingHelper.aSongs[n++]= {
+                        var song = {
                             id: aData[i].BelongId,
                             src: Song.FileName,
                             type: Song.SongType == 1? 'yc': Song.SongType == 2? 'fc': Song.SongType == 3? 'bz':'',
@@ -963,7 +989,11 @@ function main(){
                             songName: Song.SongName,
                             description: Song.Content? Song.Content.replace(/\[(img)\].*?\[\/(\1)\]/,''): ''
                         };
-                        wsingHelper.aSongs.splice(n);
+                        if (!!song.type){
+                            var sIndex = song.type + '$' + song.id;
+                            wsingHelper.aIndex.push(new SongIndex(sIndex));
+                            wsingHelper.mSongs[sIndex] = song;
+                        }
                     }
                 }
                 wsingHelper.createList(wsingHelper.container.olSong);
@@ -1073,7 +1103,7 @@ function main(){
             var sSongs= '{"data":"',aTemp= [];
             for( var i = 0; i< wsingHelper.container.aCheck.length; i++){
                 if( wsingHelper.container.aCheck[i].checked === true){
-                    aTemp.push( wsingHelper.aSongs[i].id + '$' + wsingHelper.aSongs[i].type);
+                    aTemp.push( wsingHelper.aIndex[i].song.id + '$' + wsingHelper.aIndex[i].song.type);
                 }
             }
             sSongs+= aTemp.join('$') + '","type":0,"playNow":true}';
@@ -1090,7 +1120,7 @@ function main(){
                 var aSongs= [];
                 for( var i = 0; i< wsingHelper.container.aCheck.length; i++){
                     if( wsingHelper.container.aCheck[i].checked === true){
-                        aSongs.push(wsingHelper.aSongs[i]);
+                        aSongs.push(wsingHelper.aIndex[i].song);
                     }
                 }
                 div1 = coin('div','helper_prompt','helper_temp');
@@ -1114,7 +1144,7 @@ function main(){
         var notifier = wsingHelper.container.notifier = coin('div', 'helper_notifier', 'helper_notifier', '', '提示');
         try{
             wsingHelper.searchSong();
-        }catch(e){console.log(e)};
+        }catch(e){console.log(e);}
         var divList = coin('div','helper_list'),
             divPlayer = coin('div','helper_player helper_clear');
         var Ol = createList();
@@ -1136,7 +1166,7 @@ function main(){
         });
         audio.addEventListener('error', function(e){
             if(wsingHelper.player.audio.src.slice(-4) != '.wma'){
-               wsingHelper.fix(wsingHelper.aSongs[wsingHelper.player.playing]);
+               wsingHelper.fix(wsingHelper.aIndex[wsingHelper.player.playing].song);
             }
         });
         var t = localStorage.helper_pos;
