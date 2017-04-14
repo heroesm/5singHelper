@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.0
+// @version     1.1.1
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -67,6 +67,7 @@ function main(){
         notify: notify
     };
     var locked = false;
+    var sHeadIndex = '';
 
     function prepare(){
         Document.prototype.$ = Document.prototype.querySelector;
@@ -848,8 +849,16 @@ function main(){
         var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type == 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
+        sHeadIndex = type + '$' + id; // function as jsonp lock
         jsonpp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + window.OwnerUserID + '&isPrev=1&isNext=0')
         .then(function(res){
+            var sIndex = type + '$' + id;
+            if (sIndex != sHeadIndex)
+                // prevent duplicate jsonp execution
+                return;
+            else
+                // right jsonp, continue execution and reset the jsonp lock to prevent other jsonp from execution
+                sHeadIndex = '';
             var aJSON2 = wsingHelper.aJSON2 = res;
             if(aJSON2.length === 0){
                 locked = false;
@@ -903,8 +912,16 @@ function main(){
         var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type== 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
+        sHeadIndex = type + '$' + id; // function as jsonp lock
         //use jsonp via normal callback approach
         jsonp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + window.OwnerUserID + '&isPrev=1&isNext=0', function(res){
+            var sIndex = type + '$' + id;
+            if (sIndex != sHeadIndex)
+                // prevent duplicate jsonp execution
+                return;
+            else
+                // right jsonp, continue execution and reset the jsonp lock to prevent other jsonp from execution
+                sHeadIndex = '';
             var aJSON2 = wsingHelper.aJSON2 = res;
             if(aJSON2.length === 0){
                 locked = false;
@@ -955,6 +972,7 @@ function main(){
     }
 
     function fetchInCenter(node){
+        locked = true;
         node.innerHTML= '载入中……';
         notify('载入中……');
         var nList = wsingHelper.nList + 1,
@@ -1000,17 +1018,24 @@ function main(){
                 console.log('completed',nList, wsingHelper.nList);
                 wsingHelper.nList = nList;
                 notify('载入完成', 3000);
+                locked = false;
             }
         };
-        xhr.onerror = function(){node.innerHTML= '载入失败，点击重试';};
-        xhr.ontimeout = function(){node.innerHTML= '载入超时，点击重试';};
+        xhr.onerror = function(){
+            node.innerHTML= '载入失败，点击重试';
+            locked = false;
+        };
+        xhr.ontimeout = function(){
+            node.innerHTML= '载入超时，点击重试';
+            locked = false;
+        };
         xhr.open('get', url + '&page=' + nList + '&group=-1');
         xhr.timeout = 6000;
         xhr.send();
     }
 
     function fetchMore(node, songId, songKind){
-        if(locked) return;
+        if (locked) return;
         //in personal center
         if(window.location.href.indexOf('://5sing.kugou.com/my/')!== -1){
             fetchInCenter(node);
