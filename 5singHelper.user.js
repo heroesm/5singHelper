@@ -59,6 +59,7 @@ function main(){
         coin: coin,
         searchSong: searchSong,
         fetchMore: fetchMore,
+        fetchToEnd: fetchToEnd,
         loadSong: loadSong,
         createList: createList,
         buildMy: buildMy,
@@ -67,6 +68,7 @@ function main(){
         notify: notify
     };
     var locked = false;
+    var ended = false;
     var sHeadIndex = '';
 
     function prepare(){
@@ -255,6 +257,7 @@ function main(){
             '<div id="helper_fun_bai" title="使用baidu在5sing中搜索，按回车直接搜索全部"><p class="helper_left">百度搜索：</p><input type="text" class="helper_left"><button class="helper_left">全部</button><button class="helper_left">标题</button></div>',
             '<div>',
             '<button id="helper_fun_reload" class="helper_left" title="尝试重新载入当前原生5sing页面中播放的歌曲，在页面歌曲无法顺利缓冲的情况下使用">重载歌曲</button>',
+            '<button id="helper_fun_load" class="helper_left" title="尝试将所有可以继续加载的歌曲读取到当前列表中">获取全部</button>',
             '<button id="helper_fun_export" class="helper_right" title="将当前列表中的歌曲ID以纯文本形式导出，可复制到剪贴板中保存">导出歌曲</button>',
             '<button id="helper_fun_import" class="helper_right" title="以纯文本形式导入歌曲ID到当前列表中，可从剪贴板中粘贴，歌曲是远程载入，可能要花上几秒">导入歌曲</button>',
             '</div>',
@@ -335,6 +338,9 @@ function main(){
                 window.$wsp.htmlMediaElement.dispatchEvent(new Event('pause'));
             }catch(e){console.log(e);}
         };
+        divSet.$('#helper_fun_load').onclick = function(){
+            window.wsingHelper.fetchToEnd();
+        }
         divSet.$('#helper_fun_export').onclick = exportList;
         divSet.$('#helper_fun_import').onclick = importList;
         divSet.$('#helper_opt_con').onclick = function(){
@@ -849,6 +855,7 @@ function main(){
         var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type == 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
+        if (!id) return;
         sHeadIndex = type + '$' + id; // function as jsonp lock
         jsonpp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + window.OwnerUserID + '&isPrev=1&isNext=0')
         .then(function(res){
@@ -862,6 +869,7 @@ function main(){
             var aJSON2 = wsingHelper.aJSON2 = res;
             if(aJSON2.length === 0){
                 locked = false;
+                ended = true;
                 return Promise.reject(1);
             }
             else {
@@ -912,6 +920,7 @@ function main(){
         var LastSong = (wsingHelper.aIndex[wsingHelper.aIndex.length-1] || {}).song || {},
             id = songId || LastSong.id,
             type = songKind || (LastSong.type== 'yc'? 1 : LastSong.type == 'fc'? 2: 3);
+        if (!id) return;
         sHeadIndex = type + '$' + id; // function as jsonp lock
         //use jsonp via normal callback approach
         jsonp('http://service.5sing.kugou.com/song/songListBySongId?songId=' + id +'&songKind='+ type + '&userId=' + window.OwnerUserID + '&isPrev=1&isNext=0', function(res){
@@ -927,6 +936,7 @@ function main(){
                 locked = false;
                 notify('已到达结尾', 3000);
                 node.innerHTML= '已到达结尾';
+                ended = true;
             }
             else{
                 var aIndex= [];
@@ -983,6 +993,7 @@ function main(){
             if(aData.length === 0){
                 node.innerHTML= '已到达结尾';
                 notify('已到达结尾', 3000);
+                ended = true;
             }
             else{
                 // search in existed songs list to prevent repeat
@@ -1052,7 +1063,19 @@ function main(){
         }
         else{
             node.innerHTML= '当前页面没有可以继续载入的歌曲';
+            ended = true;
         }
+    }
+
+    function fetchToEnd(){
+        var nInterval;
+        var node = window.document.$('.helper_more');
+        function doFetch(){
+            fetchMore(node);
+            if (ended) window.clearInterval(nInterval);
+        }
+        nInterval = window.setInterval(doFetch, 3000);
+        notify('将尝试载入全部歌曲信息...')
     }
 
     function buildMy(){
