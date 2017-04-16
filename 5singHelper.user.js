@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.1
+// @version     1.1.1.1
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -698,6 +698,7 @@ function main(){
         notify('载入中……');
         wsingHelper.aIndex = [];
         wsingHelper.mSongs = {};
+        ended = false;
         var t;
         if(window.location.href.indexOf('://5sing.kugou.com/my/')!== -1){
             //in personal center
@@ -994,6 +995,7 @@ function main(){
                 node.innerHTML= '已到达结尾';
                 notify('已到达结尾', 3000);
                 ended = true;
+                locked = false;
             }
             else{
                 // search in existed songs list to prevent repeat
