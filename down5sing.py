@@ -74,11 +74,18 @@ def read(sFile=None) -> '2-tuple of lists':
             aSongs = json.loads(file.read().decode('utf-8'));
         aNames = []
         aUrls = [];
-        for x in aSongs:
-            aNames.append(x['songname'] + x['sign'][-4:]);
-            aUrls.append(x['sign']);
         aIndices = re.findall(r'(fc|yc|vz)\$(\d+)', result.group(1));
         # [('fc', '123434'), ...]
+        mIndices = {}
+        for x in aSongs:
+            sIndex = '{}${}'.format(x['songtype'], x['id']);
+            sName = x['songname'] + x['sign'][-4:];
+            sUrl = x['sign'];
+            mIndices[sIndex] = [sName, sUrl];
+        for sType, sId in aIndices:
+            sIndex = '{}${}'.format(sType, sId);
+            aNames.append(mIndices[sIndex][0]);
+            aUrls.append(mIndices[sIndex][1]);
     else:
         # download from url directly
         delimiter = sInfo.find('http://');
