@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.1.1
+// @version     1.1.2
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -25,7 +25,7 @@ function main(){
         mSongs: {},
         aJSON: [],
         aJSON2: [],
-        nList: 1,
+        nList: 0,
         player: {
             pos: 1,// 1,2,3,4 correspond to top-left, top-right, bottom-right, bottom-left corner
             audio: {},
@@ -702,31 +702,8 @@ function main(){
         var t;
         if(window.location.href.indexOf('://5sing.kugou.com/my/')!== -1){
             //in personal center
-            wsingHelper.aSongsDiv = document.$$('.m_player');
-            if(wsingHelper.aSongsDiv.length == 0){		
-                notify('请在页面完成载入后重试', 3000);
-            }
-            else{
-                for (var i = 0, divSong; i < wsingHelper.aSongsDiv.length; i++) {
-                    divSong = wsingHelper.aSongsDiv[i];
-                    var song = {
-                        id: divSong.$('.m_player_name').firstChild.href.match(/\/(\d+)\./)[1],
-                        src: divSong.$('.m_player_btn_ready').getAttribute('onclick').match(/http:\/\/[^'"]+\.(mp3|m4a)/)[0],
-                        type: divSong.$('.m_player_name').firstChild.href.match(/\/(fc|yc|bz)\//)[1],
-                        space: divSong.parentNode.$('.show_userCard_link').href,
-                        singer: divSong.parentNode.$('.show_userCard_link').textContent,
-                        avatar: divSong.parentNode.previousSibling.$('img').src,
-                        songName: divSong.$('.m_player_name').textContent,
-                        description: divSong.parentNode.$('.msg_list_txt').children[0].textContent
-                    };
-                    var sIndex = song.type + '$' + song.id;
-                    wsingHelper.aIndex.push(new SongIndex(sIndex));
-                    wsingHelper.mSongs[sIndex] = song;
-                    if(!!(t = divSong.parentNode.$('.msg_list_txt').children[1]))
-                        wsingHelper.aIndex[i].song.description = t.textContent;
-                }
-                notify('载入完成', 3000);
-            }
+            wsingHelper.nList = 0;
+            fetchInCenter({});
         }
         else if(window.location.href.indexOf('://5sing.kugou.com/fm/m')!== -1){
             //in independent playing page, using JSONP to load songs information remotely
@@ -990,6 +967,9 @@ function main(){
             url= '/my/handler/message?ts=' + (new Date()).getTime(),
             xhr = new XMLHttpRequest();
         xhr.onload = function(e){
+            if (nList != wsingHelper.nList + 1){
+                return;
+            }
             var aData = JSON.parse(xhr.response).Data, i, n;
             if(aData.length === 0){
                 node.innerHTML= '已到达结尾';
@@ -1027,7 +1007,7 @@ function main(){
                         }
                     }
                 }
-                wsingHelper.createList(wsingHelper.container.olSong);
+                wsingHelper.container.olSong && wsingHelper.createList(wsingHelper.container.olSong);
                 console.log('completed',nList, wsingHelper.nList);
                 wsingHelper.nList = nList;
                 notify('载入完成', 3000);
@@ -1102,9 +1082,6 @@ function main(){
         button3.onclick = function(e){
             wsingHelper.searchSong();
             wsingHelper.createList(wsingHelper.container.olSong);
-            try{
-                wsingHelper.nList = window.pageDynList;
-            }catch(e){console.log(e);}
         };
         button4.onclick = function(e){
             wsingHelper.player.repeat= !wsingHelper.player.repeat;
@@ -1293,7 +1270,7 @@ function main(){
             '.helper_checklist input {margin: 3px;}',
             '.helper_player {position: relative; padding-top:8px;display: block}',
             '.helper_player audio {display: block; width: 100%}',
-            '.helper_prompt {position: absolute; overflow: auto; top: 2px; right: 20px; bottom: 60px; left: 2px; z-index:10; background: white; max-height: 100%; border: solid 1px;}',
+            '.helper_prompt {position: absolute; overflow: auto; top: 2px; right: 20px; bottom: 80px; left: 2px; z-index:10; background: white; max-height: 100%; border: solid 1px;}',
             '.helper_prompt ol {border: 1px; overflow: auto; min-height: 100%}',
             '.helper_prompt ol:nth-child(1) {float: left; width: 35%}',
             '.helper_prompt ol:nth-child(2) {overflow: auto; padding-left: 10px; border-left: solid 1px}',
