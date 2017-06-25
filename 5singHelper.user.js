@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2
+// @version     1.1.2.1
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -215,7 +215,7 @@ function main(){
     function fix(Song){
         notify('地址错误，尝试下载网页更新地址……');
         var xhr = new XMLHttpRequest();
-        xhr.timeout = 3000;
+        xhr.timeout = 10000;
         xhr.ontimeout = xhr.onerror = function(e){
             notify('地址更新失败', 3000);
         };
@@ -1016,14 +1016,16 @@ function main(){
         };
         xhr.onerror = function(){
             node.innerHTML= '载入失败，点击重试';
+            notify('载入失败', 3000);
             locked = false;
         };
         xhr.ontimeout = function(){
             node.innerHTML= '载入超时，点击重试';
+            notify('载入超时', 3000);
             locked = false;
         };
         xhr.open('get', url + '&page=' + nList + '&group=-1');
-        xhr.timeout = 6000;
+        xhr.timeout = 15000;
         xhr.send();
     }
 
