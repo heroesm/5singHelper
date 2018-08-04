@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2.1
+// @version     1.1.2.2
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -212,33 +212,45 @@ function main(){
         }
     }
     
+    function getSongSrc(Song){
+        var url = 'http://service.5sing.kugou.com/song/getsongurl?songid=' + Song.id + '&songtype=' + Song.type + '&from=web&version=6.6.72'
+        jsonp(url, function(res){
+            var rawSong = res
+            try{
+                Song.src = rawSong['data']['squrl']
+                notify('成功获取歌曲地址', 3000);
+            }catch(e){console.log(e);}
+        });
+    }
+
     function fix(Song){
-        notify('地址错误，尝试下载网页更新地址……');
-        var xhr = new XMLHttpRequest();
-        xhr.timeout = 10000;
-        xhr.ontimeout = xhr.onerror = function(e){
-            notify('地址更新失败', 3000);
-        };
-        xhr.onload = function(e){
-            var data = xhr.response;
-            data = /ticket["']\s*:\s*(["'])(.+)\1/.exec(data)[2];
-            data = JSON.parse(atob(data));
-            Song.src = data.file;
-            if(wsingHelper.aIndex[wsingHelper.player.playing].song == Song){
-                var audio = wsingHelper.player.audio;
-                if(audio.src == Song.src){
-                    notify('歌曲地址无效', 3000);
-                }
-                else{
-                    audio.src = Song.src;
-                    audio.load();
-                    audio.play();
-                    notify('地址更新成功', 3000);
-                }
-            }
-        };
-        xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html');
-        xhr.send();
+        notify('地址错误，尝试更新地址……');
+        getSongSrc(Song)
+        //var xhr = new XMLHttpRequest();
+        //xhr.timeout = 10000;
+        //xhr.ontimeout = xhr.onerror = function(e){
+        //    notify('地址更新失败', 3000);
+        //};
+        //xhr.onload = function(e){
+        //    var data = xhr.response;
+        //    data = /ticket["']\s*:\s*(["'])(.+)\1/.exec(data)[2];
+        //    data = JSON.parse(atob(data));
+        //    Song.src = data.file;
+        //    if(wsingHelper.aIndex[wsingHelper.player.playing].song == Song){
+        //        var audio = wsingHelper.player.audio;
+        //        if(audio.src == Song.src){
+        //            notify('歌曲地址无效', 3000);
+        //        }
+        //        else{
+        //            audio.src = Song.src;
+        //            audio.load();
+        //            audio.play();
+        //            notify('地址更新成功', 3000);
+        //        }
+        //    }
+        //};
+        //xhr.open('get', 'http://5sing.kugou.com/' + Song.type + '/' + Song.id + '.html');
+        //xhr.send();
     }
 
     function search(sKey, sSite, sType){
@@ -783,6 +795,7 @@ function main(){
                 songName: Song.songName,
                 description: (t = document.$('.lrc_info_clip'))? t.children[0].innerHTML: (t = document.$('.pl_lianxu'))? t.innerHTML: '未找到描述'
             };
+            getSongSrc(song)
             song.description = song.description.replace(/<img.+?>/g, '');
             var sIndex = song.type + '$' + song.id;
             wsingHelper.mSongs[sIndex] = song;
