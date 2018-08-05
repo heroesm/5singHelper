@@ -26,14 +26,24 @@ input.txt中接受两种形式的输入文本：一种为点击插件的“查�
 count = 0;
 
 def fix(aIndex):
-    sUrl = 'http://5sing.kugou.com/' + aIndex[0] + '/' + aIndex[1] + '.html'
-    with urlopen(sUrl) as page:
-        while (1):
-            line = page.readline()
-            if (not line or b'ticket' in line): break
-    data = re.search(rb'ticket.+?:.*?[\'"](.+)[\'"]', line).group(1)
-    data = json.loads(base64.b64decode(data).decode('utf-8'))
-    return data['file'];
+    sType, sId = aIndex
+    sApiSongSrc = 'http://service.5sing.kugou.com/song/getsongurl?songid={}&songtype={}&from=web&version=6.6.72' #  song.nId, song.sType
+    sUrl = sApiSongSrc.format(sId, sType)
+    sUrl += '&_={}'.format(str(int(time()*1000)));
+    with urlopen(sUrl) as res:
+        sData = res.read().decode('utf-8');
+        mData = json.loads(sData.strip('()'));
+        sUrl = mData['data']['squrl'];
+    assert sUrl;
+    return sUrl
+    # sUrl = 'http://5sing.kugou.com/' + aIndex[0] + '/' + aIndex[1] + '.html'
+    # with urlopen(sUrl) as page:
+    #     while (1):
+    #         line = page.readline()
+    #         if (not line or b'ticket' in line): break
+    # data = re.search(rb'ticket.+?:.*?[\'"](.+)[\'"]', line).group(1)
+    # data = json.loads(base64.b64decode(data).decode('utf-8'))
+    # return data['file'];
 
 def download(sName, sUrl, aIndex, target):
     global count;
@@ -146,4 +156,5 @@ def main():
             print('\n搜索结束，所有歌曲下载成功。');
     input('总共下载歌曲 ' + str(count) + ' 首，按回车键退出。');
     
-main();
+if __name__ == '__main__':
+    main();
