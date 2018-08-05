@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2.2
+// @version     1.1.2.3
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -226,6 +226,18 @@ function main(){
     function fix(Song){
         notify('地址错误，尝试更新地址……');
         getSongSrc(Song)
+        if(wsingHelper.aIndex[wsingHelper.player.playing].song == Song){
+            var audio = wsingHelper.player.audio;
+            if(audio.src == Song.src){
+                notify('歌曲地址无效', 3000);
+            }
+            else{
+                audio.src = Song.src;
+                audio.load();
+                audio.play();
+                notify('地址更新成功', 3000);
+            }
+        }
         //var xhr = new XMLHttpRequest();
         //xhr.timeout = 10000;
         //xhr.ontimeout = xhr.onerror = function(e){
