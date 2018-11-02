@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2.3
+// @version     1.1.2.4
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -817,17 +817,17 @@ function main(){
         else if(/:\/\/5sing\.kugou\.com\/m\/detail\/(?:yc|fc|bz)-\d+.*\.html/.test(window.location.href) ||
                /:\/\/5sing\.kugou\.com\/m\/Song\/detail\/(?:yc|fc|bz)\/\d+(\.html)?/i.test(window.location.href)){
             //in mobile page
-            var src = document.$('audio[src]').src;
             var song = {
-                id: window.pageData.songId,
-                src: src,
-                type: window.pageData.songType,
-                space: 'http://5sing.kugou.com/' + window.pageData.singerId,
-                singer: document.$('.hd .author').textContent,
-                avatar: document.$('.cd-wrap .bd img').src,
-                songName: document.$('.hd .songname').textContent,
+                id: window.pageConfig.songId,
+                src: undefined,
+                type: window.pageConfig.songType,
+                space: 'http://5sing.kugou.com/' + window.pageConfig.singerId,
+                singer: document.$('p.singer').textContent,
+                avatar: document.$('.cd-box img').src,
+                songName: document.$('p.song').textContent,
                 description: ''
             };
+            getSongSrc(song)
             var sIndex = song.type + '$' + song.id;
             wsingHelper.mSongs[sIndex] = song;
             wsingHelper.aIndex.push(new SongIndex(sIndex));
