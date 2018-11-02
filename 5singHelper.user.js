@@ -5,7 +5,7 @@
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
 // @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2.2
+// @version     1.1.2.3
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -719,11 +719,12 @@ function main(){
         }
         else if(window.location.href.indexOf('://5sing.kugou.com/fm/m')!== -1){
             //in independent playing page, using JSONP to load songs information remotely
-            var  a1 = [], aIndex=[], sIndex;
-            a1 = document.$('#mCSB_1').$$('a[songinfo]');
+            var  a1 = [], aIndex=[], sIndex, sTip;
+            a1 = document.$('#mCSB_1').$$('a.btn-view')
             for(var i = 0; i< a1.length; i++){
-                if(a1[i].getAttribute('songinfo')!= sIndex){
-                    sIndex = a1[i].getAttribute('songinfo');
+                sTip = a1[i].href.match(/(fc|yc|bz)\/\d+/)[0].replace('/','$');
+                if(sTip != sIndex){
+                    sIndex = sTip
                     aIndex.push(sIndex);
                     wsingHelper.aIndex.push(new SongIndex(sIndex));
                 }
