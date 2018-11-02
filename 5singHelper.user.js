@@ -4,8 +4,8 @@
 // @description 5sing功能增强
 // @include     http://5sing.kugou.com/*
 // @include     http://fc.5sing.com/*
-// @include     http://static.5sing.kugou.com/#*
-// @version     1.1.2.4
+// @include     http://static.5sing.kugou.com/???*
+// @version     1.1.2.5
 // @grant       none
 // @run-at      document-start
 // ==/UserScript==
@@ -566,12 +566,12 @@ function main(){
 
     function setSongCookies(sSongs){
         var iframe = document.createElement('iframe');
-        iframe.src = 'http://static.5sing.kugou.com/#' + sSongs;
+        iframe.src = 'http://static.5sing.kugou.com/???' + sSongs;
         iframe.style.display = 'none';
         document.body.appendChild(iframe);
         iframe.onload = function(){
             //iframe.remove();
-            document.body.removeChild(iframe);
+            //document.body.removeChild(iframe);
         };
     }
 
@@ -720,7 +720,7 @@ function main(){
         else if(window.location.href.indexOf('://5sing.kugou.com/fm/m')!== -1){
             //in independent playing page, using JSONP to load songs information remotely
             var  a1 = [], aIndex=[], sIndex, sTip;
-            a1 = document.$('#mCSB_1').$$('a.btn-view')
+            a1 = document.$('.playlist').$$('a.btn-view')
             for(var i = 0; i< a1.length; i++){
                 sTip = a1[i].href.match(/(fc|yc|bz)\/\d+/)[0].replace('/','$');
                 if(sTip != sIndex){
@@ -1146,15 +1146,19 @@ function main(){
             var sSongs= '{"data":"',aTemp= [];
             for( var i = 0; i< wsingHelper.container.aCheck.length; i++){
                 if( wsingHelper.container.aCheck[i].checked === true){
-                    aTemp.push( wsingHelper.aIndex[i].song.id + '$' + wsingHelper.aIndex[i].song.type);
+                    aTemp.push( wsingHelper.aIndex[i].song.type + '$' + wsingHelper.aIndex[i].song.id);
                 }
             }
-            sSongs+= aTemp.join('$') + '","type":0,"playNow":true}';
+            sSongs+= aTemp.join('$') + '","type":0,"playNow":false}';
             wsingHelper.setSongCookies(sSongs);
-            //直接把5sing的检测代码抄过来了
-            var time = parseInt(window.globals.cookies.get("fmPageTime"));
-            if(isNaN(time)){
-                window.globals.open("/fm/m/");
+            try{
+                var time = parseInt(window.globals.cookies.get("fmPageTime"));
+                if(isNaN(time)){
+                    window.open("/fm/m/");
+                }
+            }catch(e){
+                console.log(e)
+                window.open("/fm/m/");
             }
         };
         button10.onclick = function(e){
@@ -1323,9 +1327,11 @@ function main(){
     }
 
     function init(){
-        if(location.href.indexOf('://static.5sing.kugou.com/#') !== -1) {
+        if(location.href.indexOf('://static.5sing.kugou.com/???') !== -1) {
             //modify cookies in static.5sing.kugou.com by operating in a new iframe
-            localStorage.setItem('fmPage_Add',decodeURIComponent(location.hash.substring(1)));
+            var data = decodeURIComponent(location.href.match(/\?\?\?(.+)$/)[1])
+            console.log('transfered', data)
+            localStorage.setItem('fmPage_Add',decodeURIComponent(data));
             //console.log(localStorage);
             return;
         }
