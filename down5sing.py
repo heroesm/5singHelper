@@ -14,11 +14,11 @@ input.txt中接受两种形式的输入文本：一种为点击插件的“查�
 前者形如：
     第一首歌
     第二首歌
-    
+
     http://data.5sing.kgimg.com/xxx
     http://data.5sing.kgimg.com/xxxx
     http://data.5sing.kgimg.com/xxxxx
-    
+
 后者形如：
     yc$1234567$fc$9998765$bz$1111111
 ''';
@@ -49,7 +49,7 @@ def download(sName, sUrl, aIndex, target):
     global count;
     filepath = os.path.join(target, re.sub(r'[\\/:*?<>"|\t]', ' ', sName));
     while (os.path.exists(filepath)):
-        filepath = re.sub(r'(\.\w+)?$', r'_\1', filepath);
+        filepath = re.sub(r'(\.\w+)?$', r'_\1', filepath, count=1);
     try:
         mp3 = urllib.request.urlretrieve(sUrl, filename=filepath);
         print('已下载：' + os.path.abspath(mp3[0]))
@@ -84,7 +84,7 @@ def read(sFile=None) -> '2-tuple of lists':
             aSongs = json.loads(file.read().decode('utf-8'));
         aNames = []
         aUrls = [];
-        aIndices = re.findall(r'(fc|yc|vz)\$(\d+)', result.group(1));
+        aIndices = re.findall(r'(fc|yc|bz)\$(\d+)', result.group(1));
         # [('fc', '123434'), ...]
         mIndices = {}
         for x in aSongs:
@@ -140,7 +140,7 @@ def main():
         download(*x, target);
     print('\n下载已完成。');
     if (aErrorFile):
-        print('\n以下歌曲下载失败： ', *aErrorFile, sep='\n'); 
+        print('\n以下歌曲下载失败： ', *aErrorFile, sep='\n');
         print('\n尝试通过网页搜索下载地址……');
         aError = aErrorFile;
         aErrorFile = [];
@@ -151,10 +151,10 @@ def main():
             else:
                 aErrorFile.append(x);
         if (aErrorFile):
-            print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n'); 
+            print('\n搜索结束，最终下载失败歌曲如下：', *aErrorFile, sep='\n');
         else:
             print('\n搜索结束，所有歌曲下载成功。');
     input('总共下载歌曲 ' + str(count) + ' 首，按回车键退出。');
-    
+
 if __name__ == '__main__':
     main();
